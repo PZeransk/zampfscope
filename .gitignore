@@ -1,0 +1,5 @@
+#gitignore for zampf project
+**/zampf_proj.cache
+**/zampf_proj.ip_user_files
+**/zampf_proj.runs
+**/zampf_proj.sim
