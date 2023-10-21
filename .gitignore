@@ -4,3 +4,6 @@
 **/zampf_proj.runs
 **/zampf_proj.sim
 **/zampf_proj.srcs/utils_1
+.log
+.jou
+.str
