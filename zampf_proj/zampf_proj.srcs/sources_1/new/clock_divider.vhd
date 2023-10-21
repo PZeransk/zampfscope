@@ -2,9 +2,9 @@
 -- Company: 
 -- Engineer: 
 -- 
--- Create Date: 19.10.2023 16:24:05
+-- Create Date: 21.10.2023 11:41:06
 -- Design Name: 
--- Module Name: TOP - Behavioral
+-- Module Name: clock_divider - 
 -- Project Name: 
 -- Target Devices: 
 -- Tool Versions: 
@@ -21,7 +21,7 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-
+use IEEE.numeric_std.all;
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
 --use IEEE.NUMERIC_STD.ALL;
@@ -31,24 +31,36 @@ use IEEE.STD_LOGIC_1164.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
-entity TOP is
-    Port ( 
-    i_clk : in STD_LOGIC;
-    o_clk : out std_logic
-    );
-end TOP;
+entity clock_divider is
+	Generic(
+	C_cnt_div	:	  integer
+	);
+ 	Port (
+ 	i_clk 		: in  std_logic;
+ 	o_clk		: out std_logic
+  	);
+end clock_divider;
 
-architecture Behavioral of TOP is
-signal clock : std_logic;
+architecture clk_div of clock_divider is
+
+SIGNAL r_cnt		:   integer RANGE 0 TO C_cnt_div - 1 := 0;
+SIGNAL clock_state	:	std_logic := '0';
+
+begin
+process(i_clk)
 begin
 
-clk_div1 : ENTITY work.clock_divider
-GENERIC MAP(
-	C_cnt_div => 10
-	)
-PORT MAP(
-	i_clk	=> i_clk,
-	o_clk	=> o_clk
-	);
+if(rising_edge(i_clk)) then
+	r_cnt <= r_cnt + 1;
 
-end Behavioral;
+	if(r_cnt = C_cnt_div-1) then
+	clock_state <= NOT clock_state;
+	r_cnt <= 0;
+	end if;
+
+end if;
+
+end process;
+o_clk <= clock_state;
+
+end ;
