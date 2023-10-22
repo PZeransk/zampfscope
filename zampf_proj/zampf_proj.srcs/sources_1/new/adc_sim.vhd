@@ -42,22 +42,50 @@ Port (
 end adc_sim;
 
 architecture Behavioral of adc_sim is
-signal r_adc_data 	: std_logic_vector(15 downto 0) := "0001010101010101";
+type 	t_sine_table is array (127 downto 0) of integer range 0 to 4096;
+constant C_sine_LUT : t_sine_table := (
+2048 ,2149 ,2250 ,2350 ,2450 ,2549 ,2647 ,2743 ,2837 ,2929 , 
+3020 ,3108 ,3193 ,3276 ,3355 ,3431 ,3504 ,3574 ,3639 ,3701 , 
+3759 ,3812 ,3862 ,3906 ,3946 ,3982 ,4013 ,4039 ,4060 ,4076 , 
+4087 ,4094 ,4095 ,4091 ,4082 ,4069 ,4050 ,4026 ,3998 ,3965 , 
+3927 ,3884 ,3837 ,3786 ,3730 ,3671 ,3607 ,3540 ,3468 ,3394 , 
+3316 ,3235 ,3151 ,3064 ,2975 ,2883 ,2790 ,2695 ,2598 ,2500 , 
+2400 ,2300 ,2199 ,2098 ,1997 ,1896 ,1795 ,1695 ,1595 ,1497 , 
+1400 ,1305 ,1212 ,1120 ,1031 ,944 ,860 ,779 ,701 ,627 , 
+556 ,488 ,424 ,365 ,309 ,258 ,211 ,168 ,130 ,97 , 
+69 ,45 ,26 ,13 ,4 ,0 ,1 ,8 ,19 ,35 , 
+56 ,82 ,113 ,149 ,189 ,234 ,283 ,336 ,394 ,456 , 
+521 ,591 ,664 ,740 ,820 ,902 ,987 ,1075 ,1166 ,1258 , 
+1353 ,1449 ,1546 ,1645 ,1745 ,1845 ,1946 ,2048
+	); 
+
+signal r_adc_data 	: std_logic_vector(15 downto 0) := (others => '0');
 signal r_adc_shift	: std_logic_vector(15 downto 0) := (others => '0');
 signal r_data_byte 	: std_logic;
-signal r_cnt		: integer RANGE 0 TO 15 := 0;
+signal r_table_cnt	: integer RANGE 0 TO 127 := 0;
 
 begin
 process(i_cs, i_clk)
 begin
 
+if(rising_edge(i_cs)) then
+if(r_table_cnt = 127) then
+r_table_cnt <= 0;
+else
+r_table_cnt <= r_table_cnt + 1;
+r_adc_data(11 downto 0) 	<= std_logic_vector(to_unsigned(C_sine_LUT(r_table_cnt),12));
+r_adc_shift(11 downto 0) 	<= std_logic_vector(to_unsigned(C_sine_LUT(r_table_cnt),12));
+end if;
+end if;
+
+
 if(i_cs = '0') then
 if(falling_edge(i_clk)) then
-
 
 o_miso0 <= r_adc_data(r_adc_data'high);
 
 r_adc_data <= r_adc_data(r_adc_data'high - 1 downto r_adc_data'low) & r_adc_data(r_adc_data'high);
+
 
 
 end if;
