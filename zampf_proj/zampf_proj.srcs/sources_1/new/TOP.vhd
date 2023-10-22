@@ -15,7 +15,7 @@
 -- Revision:
 -- Revision 0.01 - File Created
 -- Additional Comments:
--- 
+-- F:\Programy\SUBLIME\Sublime Text 3\sublime_text.exe [file name] -l[line number]
 ----------------------------------------------------------------------------------
 
 
@@ -39,7 +39,10 @@ entity TOP is
 end TOP;
 
 architecture Behavioral of TOP is
-signal clock : std_logic;
+signal clock 	: std_logic;
+signal r_cs  	: std_logic;
+signal r_miso0	: std_logic;
+signal r_miso1	: std_logic;
 begin
 
 clk_div1 : ENTITY work.clock_divider
@@ -49,6 +52,15 @@ GENERIC MAP(
 PORT MAP(
 	i_clk	=> i_clk,
 	o_clk	=> o_clk
+	);
+
+
+adc_sim1 : ENTITY work.adc_sim
+PORT MAP(
+	i_clk	=> i_clk,
+	i_cs 	=> r_cs,
+	o_miso0	=> r_miso0,
+	o_miso1	=> r_miso1
 	);
 
 end Behavioral;
