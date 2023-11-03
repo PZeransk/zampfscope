@@ -71,6 +71,7 @@ BEGIN
             ELSE
               slave <= 0;            --set to first slave if not valid
             END IF;
+
             IF(clk_div = 0) THEN     --check for valid spi speed
               clk_ratio <= 1;        --set to maximum speed if zero
               count <= 1;            --initiate system-to-spi clock counter
@@ -78,6 +79,7 @@ BEGIN
               clk_ratio <= clk_div;  --set to input selection if valid
               count <= clk_div;      --initiate system-to-spi clock counter
             END IF;
+            
             sclk <= cpol;            --set spi clock polarity
             assert_data <= NOT cpha; --set spi clock phase
             tx_buffer <= tx_data;    --clock in data for transmit into buffer
