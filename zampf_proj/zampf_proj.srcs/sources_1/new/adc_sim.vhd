@@ -33,7 +33,7 @@ use IEEE.numeric_std.all;
 --use UNISIM.VComponents.all;
 
 entity adc_sim is
-Generic(C_data_length	:	integer	:=	15
+Generic(C_data_length	:	integer
 	);
 Port (
 	i_clk 	: in 	std_logic;
@@ -65,7 +65,7 @@ signal r_adc_data 		: std_logic_vector(C_data_length - 1 downto 0) := (others =>
 signal r_adc_shift		: std_logic_vector(C_data_length - 1 downto 0) := (others => '0');
 signal r_data_byte 		: std_logic;
 signal r_table_cnt		: integer RANGE 0 TO 127 := 0;
-signal data_byte_cnt	: integer RANGE 0 TO C_data_length - 1 := 0; -- 16 bitowy wektor
+signal data_byte_cnt	: integer RANGE 0 TO C_data_length := 0; -- 15 bitowy wektor
 
 begin
 process(i_cs, i_clk)
@@ -74,10 +74,15 @@ begin
 if(rising_edge(i_cs)) then
 if(r_table_cnt = 127) then
 r_table_cnt <= 0;
+o_miso0 <= 'Z';
+o_miso1 <= 'Z';
 else
+o_miso0 <= 'Z';
+o_miso1 <= 'Z';
 r_table_cnt <= r_table_cnt + 1;
 data_byte_cnt <= 0;
-r_adc_data(11 downto 0) 	<= std_logic_vector(to_unsigned(C_sine_LUT(r_table_cnt),12));
+
+r_adc_data <= "0000" & std_logic_vector(to_unsigned(C_sine_LUT(r_table_cnt),12));
 r_adc_shift(11 downto 0) 	<= std_logic_vector(to_unsigned(C_sine_LUT(r_table_cnt),12));
 end if;
 end if;
@@ -86,13 +91,12 @@ end if;
 
 if(falling_edge(i_clk)) then
 if(i_cs = '0') then
-if(data_byte_cnt = C_data_length - 1) then
-o_miso0 <= 'Z';
-o_miso1 <= 'Z';
+if(data_byte_cnt = C_data_length) then
+
 else
 	o_miso0 <= r_adc_data(r_adc_data'high);
 	o_miso1 <= r_adc_data(r_adc_data'high);
-	r_adc_data <= r_adc_data(r_adc_data'high - 1 downto r_adc_data'low) & r_adc_data(r_adc_data'high);
+	r_adc_data <= r_adc_data(r_adc_data'high - 1 downto r_adc_data'low) & '0';
 	data_byte_cnt <= data_byte_cnt + 1;
 end if;
 

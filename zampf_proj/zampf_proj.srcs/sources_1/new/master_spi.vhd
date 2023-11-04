@@ -90,6 +90,8 @@ ELSIF(rising_edge(i_clk)) then
 			clk_cnt <= 0;
 			r_rx_register0 <= (others => '0');
 			r_rx_register1 <= (others => '0');
+			o_rx_data_0 <= r_rx_register0;
+			o_rx_data_1 <= r_rx_register1;
 			-- o_mosi <= 'Z';
 			IF(i_enable = '1') THEN 
 				r_clk_state <= i_clk_polarity;
@@ -110,11 +112,14 @@ ELSIF(rising_edge(i_clk)) then
 					o_rx_data_1 <= r_rx_register1;
 					o_cs <= '1';
 					r_current_state <= IDLE;
-				elsif(r_clk_state = i_clk_phase) then
-					r_rx_register0 <= r_rx_register0(r_rx_register0'high - 1 downto r_rx_register0'low) & i_miso_0;
-					r_rx_register1 <= r_rx_register1(r_rx_register1'high - 1 downto r_rx_register1'low) & i_miso_1;
+				else
 					clk_cnt <= clk_cnt + 1;
 					r_clk_state <= NOT r_clk_state;
+				end if;
+
+				if(r_clk_state = i_clk_phase AND clk_cnt <= C_data_length*2) then
+					r_rx_register0 <= r_rx_register0(r_rx_register0'high - 1 downto r_rx_register0'low) & i_miso_0;
+					r_rx_register1 <= r_rx_register1(r_rx_register1'high - 1 downto r_rx_register1'low) & i_miso_1;
 				end if;
 
 				
