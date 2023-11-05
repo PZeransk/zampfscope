@@ -54,6 +54,13 @@ signal spi_clk 		: std_logic;
 signal spi_data_0	: std_logic_vector(15 downto 0);
 signal spi_data_1	: std_logic_vector(15 downto 0);
 
+signal o_h_sync  	: std_logic;
+signal o_v_sync  	: std_logic;
+signal o_disp_ena	: std_logic;
+signal o_r_sig		: std_logic_vector(2 downto 0);
+signal o_b_sig		: std_logic_vector(2 downto 0);
+signal o_g_sig		: std_logic_vector(2 downto 0);
+
 begin
 
 
@@ -89,6 +96,20 @@ PORT MAP(
 	i_cs 	=> r_cs,
 	o_miso0	=> r_miso0,
 	o_miso1	=> r_miso1
+	);
+
+VGA_test : ENTITY work.vga_controller
+PORT MAP(
+	i_pixel_clk	=> i_clk,
+	i_reset_n   => NOT i_reset,
+	i_adc_data0	=> spi_data_0,
+	i_adc_data1	=> spi_data_1,
+	o_h_sync   	=> o_h_sync,
+	o_v_sync   	=> o_v_sync,
+	o_disp_ena 	=> o_disp_ena,
+	o_r_sig		=> o_r_sig,
+	o_b_sig		=> o_b_sig,
+	o_g_sig		=> o_g_sig	
 	);
 
 
