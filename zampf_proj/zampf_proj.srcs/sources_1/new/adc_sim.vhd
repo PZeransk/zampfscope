@@ -72,19 +72,17 @@ process(i_cs, i_clk)
 begin
 
 if(rising_edge(i_cs)) then
-if(r_table_cnt = 127) then
-r_table_cnt <= 0;
-o_miso0 <= 'Z';
-o_miso1 <= 'Z';
-else
-o_miso0 <= 'Z';
-o_miso1 <= 'Z';
-r_table_cnt <= r_table_cnt + 1;
-data_byte_cnt <= 0;
-
-r_adc_data <= "0000" & std_logic_vector(to_unsigned(C_sine_LUT(r_table_cnt),12));
-r_adc_shift(11 downto 0) 	<= std_logic_vector(to_unsigned(C_sine_LUT(r_table_cnt),12));
-end if;
+        o_miso0 <= 'Z';
+        o_miso1 <= 'Z';
+        if(r_table_cnt = 127) then
+            r_table_cnt <= 0;
+        else
+            r_table_cnt <= r_table_cnt + 1;
+        end if;
+        data_byte_cnt <= 0;
+        
+        r_adc_data <= "0000" & std_logic_vector(to_unsigned(C_sine_LUT(r_table_cnt),12));
+        r_adc_shift(11 downto 0) 	<= std_logic_vector(to_unsigned(C_sine_LUT(r_table_cnt),12));
 end if;
 
 
