@@ -40,7 +40,7 @@ signal clk 		: std_logic := '0';
 signal rst 		: std_logic := '0';
 signal enable 	: std_logic := '1';
 
-constant clock_period : time := 20 ns; 
+constant clock_period : time := 10 ns; 
 
 begin
 

@@ -67,10 +67,14 @@ signal frames_cnt	: integer range 0 to 10 	   := 0;
 
 begin
 
+
+
+
+
 process(i_pixel_clk, i_reset_n)
 begin
 
-if(i_reset_n = '0') then
+if(i_reset_n = '1') then
 	h_pulses_cnt <= 0;
 	v_pulses_cnt <= 0;
 	o_h_sync <= '1';
@@ -126,9 +130,6 @@ elsif(rising_edge(i_pixel_clk)) then
 	o_v_sync <= '1';
 	end if;
 	
-
-
-
 end if;
 
 

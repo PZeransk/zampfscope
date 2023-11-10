@@ -73,7 +73,7 @@ begin
 process(i_clk, i_reset_n)
 begin 
 
-IF(i_reset_n = '0') then
+IF(i_reset_n = '1') then
 	o_cs <= '1';
 	o_rx_data_0 <= (others => '0');
 	o_rx_data_1 <= (others => '0');

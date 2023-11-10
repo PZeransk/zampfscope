@@ -53,6 +53,7 @@ signal bussy  		: std_logic;
 signal spi_clk 		: std_logic;
 signal spi_data_0	: std_logic_vector(15 downto 0);
 signal spi_data_1	: std_logic_vector(15 downto 0);
+signal div_clk		: std_logic;
 
 signal o_h_sync  	: std_logic;
 signal o_v_sync  	: std_logic;
@@ -63,16 +64,24 @@ signal o_g_sig		: std_logic_vector(2 downto 0);
 
 begin
 
+clk_divider	:	ENTITY work.clock_divider
+GENERIC MAP(
+	C_cnt_div	=> 4
+	)
+PORT MAP(
+	i_clk 		=> i_clk,
+	o_clk 		=> div_clk
+	);
 
 
 master_spi_0 : ENTITY work.master_spi
 GENERIC MAP(
-	C_clk_ratio => 10,
+	C_clk_ratio => 5,
 	C_data_length => 16
 	)
 PORT MAP(
 	i_clk		   => i_clk,
-	i_reset_n	   => NOT i_reset,
+	i_reset_n	   => i_reset,
 	--i_cs 		   => 
 	i_enable	   => i_enable_spi,
 	i_clk_polarity => clock_pol,
@@ -88,6 +97,7 @@ PORT MAP(
 	o_rx_data_1	   => spi_data_1
 	);
 
+
 adc_sim1 : ENTITY work.adc_sim
 GENERIC MAP(C_data_length => 16
 	)
@@ -100,8 +110,8 @@ PORT MAP(
 
 VGA_test : ENTITY work.vga_controller
 PORT MAP(
-	i_pixel_clk	=> i_clk,
-	i_reset_n   => NOT i_reset,
+	i_pixel_clk	=> div_clk,
+	i_reset_n   => i_reset,
 	i_adc_data0	=> spi_data_0,
 	i_adc_data1	=> spi_data_1,
 	o_h_sync   	=> o_h_sync,
@@ -110,6 +120,20 @@ PORT MAP(
 	o_r_sig		=> o_r_sig,
 	o_b_sig		=> o_b_sig,
 	o_g_sig		=> o_g_sig	
+	);
+
+IMAGE_GEN_TEST : ENTITY work.image_generator
+PORT MAP(
+	i_clk			=> i_clk,
+	i_cs 			=> r_cs,
+	i_reset_n		=> i_reset,
+	--i_trigger_n 	=> 
+	--i_h_sync		=> 
+	i_v_sync		=> o_v_sync,
+	i_spi_data0		=> spi_data_0,
+	i_spi_data1		=> spi_data_1
+	--o_end_meas	=> 
+	--o_image_data	=> 
 	);
 
 
