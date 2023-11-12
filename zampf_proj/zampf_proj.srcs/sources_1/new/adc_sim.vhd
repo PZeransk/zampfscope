@@ -61,7 +61,8 @@ constant C_sine_LUT : t_sine_table := (
 1353 ,1449 ,1546 ,1645 ,1745 ,1845 ,1946 ,2048
 	); 
 
-signal r_adc_data 		: std_logic_vector(C_data_length - 1 downto 0) := (others => '0');
+signal r_adc_data0 		: std_logic_vector(C_data_length - 1 downto 0) := (others => '0');
+signal r_adc_data1 		: std_logic_vector(C_data_length - 1 downto 0) := (others => '0');
 signal r_adc_shift		: std_logic_vector(C_data_length - 1 downto 0) := (others => '0');
 signal r_data_byte 		: std_logic;
 signal r_table_cnt		: integer RANGE 0 TO 127 := 0;
@@ -81,7 +82,8 @@ if(rising_edge(i_cs)) then
         end if;
         data_byte_cnt <= 0;
         
-        r_adc_data <= "0000" & std_logic_vector(to_unsigned(C_sine_LUT(r_table_cnt),12));
+        r_adc_data0 <= "0000" & std_logic_vector(to_unsigned(C_sine_LUT(r_table_cnt),12));
+        r_adc_data1 <= "0000" & std_logic_vector(to_unsigned(C_sine_LUT(r_table_cnt)/2,12));
         r_adc_shift(11 downto 0) 	<= std_logic_vector(to_unsigned(C_sine_LUT(r_table_cnt),12));
 end if;
 
@@ -92,9 +94,10 @@ if(i_cs = '0') then
 if(data_byte_cnt = C_data_length) then
 
 else
-	o_miso0 <= r_adc_data(r_adc_data'high);
-	o_miso1 <= r_adc_data(r_adc_data'high);
-	r_adc_data <= r_adc_data(r_adc_data'high - 1 downto r_adc_data'low) & '0';
+	o_miso0 <= r_adc_data0(r_adc_data0'high);
+	o_miso1 <= r_adc_data1(r_adc_data1'high);
+	r_adc_data0 <= r_adc_data0(r_adc_data0'high - 1 downto r_adc_data0'low) & '0';
+	r_adc_data1 <= r_adc_data1(r_adc_data1'high - 1 downto r_adc_data1'low) & '0';
 	data_byte_cnt <= data_byte_cnt + 1;
 end if;
 

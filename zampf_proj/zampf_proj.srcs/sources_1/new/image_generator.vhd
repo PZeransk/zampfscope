@@ -66,7 +66,8 @@ TYPE T_states		is (IDLE,
 --type T_IMAGE_BINARY	is array (0 to C_pixel_widht - 1) of std_logic_vector(C_pixel_height - 1 downto 0);
 
 signal measurment_status	: std_logic;
-signal r_spi_data 			: std_logic_vector(C_resolution - 1 downto 0) := (others => '0');
+signal r_spi_data0 			: std_logic_vector(C_resolution - 1 downto 0) := (others => '0');
+signal r_spi_data1 			: std_logic_vector(C_resolution - 1 downto 0) := (others => '0');
 signal pixel_height			: integer range 0 to C_pixel_height := 0;
 signal pixel_cnt			: integer range 0 to C_pixel_widht := 0;
 signal data_send_cnt		: integer range 0 to C_pixel_widht := 0;
@@ -109,9 +110,10 @@ case image_state is
 			
 					if (pixel_cnt < C_pixel_widht - 1) then
 	
-					r_spi_data <= i_spi_data0(i_spi_data0'low + 11 downto i_spi_data0'low + 4);
-					MY_IMAGE(pixel_cnt) <= r_spi_data;
-					pixel_height <= to_integer(unsigned(r_spi_data));
+					r_spi_data0 <= i_spi_data0(i_spi_data0'low + 11 downto i_spi_data0'low + 4);
+					r_spi_data1 <= i_spi_data1(i_spi_data1'low + 11 downto i_spi_data1'low + 4);
+					MY_IMAGE(pixel_cnt) <= r_spi_data0;
+					--pixel_height <= to_integer(unsigned(r_spi_data0));
 	
 					pixel_cnt <= pixel_cnt + 1;
 	
