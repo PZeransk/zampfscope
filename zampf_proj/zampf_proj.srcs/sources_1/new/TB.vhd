@@ -36,9 +36,18 @@ entity TB is
 end TB;
 
 architecture Behavioral of TB is
-signal clk 		: std_logic := '0';
-signal rst 		: std_logic := '0';
-signal enable 	: std_logic := '1';
+signal clk 			: std_logic := '0';
+signal rst 			: std_logic := '0';
+signal enable 		: std_logic := '1';
+signal trigger 		: std_logic := '0';
+
+signal o_h_sync  	: std_logic;
+signal o_v_sync  	: std_logic;
+signal o_disp_ena	: std_logic;
+signal o_r_sig		: std_logic_vector(2 downto 0);
+signal o_b_sig		: std_logic_vector(2 downto 0);
+signal o_g_sig		: std_logic_vector(2 downto 0);
+signal o_new_line 	: std_logic;
 
 constant clock_period : time := 10 ns; 
 
@@ -48,7 +57,15 @@ uut: ENTITY work.TOP
 PORT MAP(
 	i_clk 			=> clk,
 	i_reset 	 	=> rst,
-	i_enable_spi 	=> enable
+	i_enable_spi 	=> enable,
+	i_trigger_n		=> trigger,
+	o_h_sync   		=> o_h_sync,
+	o_v_sync   		=> o_v_sync,
+	o_disp_ena 		=> o_disp_ena,
+	o_r_sig			=> o_r_sig,
+	o_b_sig			=> o_b_sig,
+	o_g_sig			=> o_g_sig,
+	o_new_line		=> o_new_line,
 	);
 
 clk_process : process
