@@ -37,7 +37,8 @@ entity clock_divider is
 	);
  	Port (
  	i_clk 		: in  std_logic;
- 	o_clk		: out std_logic
+ 	o_clk		: out std_logic;
+ 	i_reset_n   : in std_logic
   	);
 end clock_divider;
 
@@ -50,7 +51,10 @@ begin
 process(i_clk)
 begin
 
-if(rising_edge(i_clk)) then
+if(i_reset_n = '0') then
+    r_cnt <= 0;
+    clock_state <= '0';
+elsif(rising_edge(i_clk)) then
 	r_cnt <= r_cnt + 1;
 
 	if(r_cnt = C_cnt_div-1) then
