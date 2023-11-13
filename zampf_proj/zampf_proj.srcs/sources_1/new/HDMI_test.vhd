@@ -21,7 +21,7 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-
+use IEEE.numeric_std.all;
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
 --use IEEE.NUMERIC_STD.ALL;
@@ -55,26 +55,40 @@ Port (
 end HDMI_test;
 
 architecture Behavioral of HDMI_test is
+component clock_divider is
+	Generic(
+	C_cnt_div	:	  integer
+	);
+ 	Port (
+ 	i_clk 		: in  std_logic;
+ 	o_clk		: out std_logic;
+ 	i_reset_n   : in std_logic
+  	);
+end component;
+
+
 signal clk_pixel_x5 : std_logic;
+signal Xvis : unsigned; -- range(0, img_width) -- variables that shows which 
+signal Yvis : unsigned; -- range(0,img_height) -- pixel of screen is printed
 
 begin
-
-clk_div_internal : work.clock_divider
-generic map (
-    C_cnt_div => 5
-)
-port map (
-    i_reset_n => i_reset_n;
-    i_clk => i_pxl_clk;
-    o_clk => clk_pixel_x5
-)
-
-process(i_pxl_clk, i_reset_n)
-    if (i_reset_n = '0') then
-        
-    elsif(rising_edge(i_pxl_clk)) then
+    clk_div_internal : clock_divider
+    generic map (
+        C_cnt_div => 5
+    )
+    port map (
+        i_reset_n => i_reset_n,
+        i_clk => i_pxl_clk,
+        o_clk => clk_pixel_x5
+    )
     
-    end if;
-end process;
-
+    process(i_pxl_clk, i_reset_n)
+    begin
+        if (i_reset_n = '0') then
+            Xvis <= (others => '0');
+            Yvis <= (others => '0');
+        elsif(rising_edge(i_pxl_clk)) then
+            
+        end if;
+    end process;
 end Behavioral;
