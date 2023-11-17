@@ -51,7 +51,7 @@ begin
 process(i_clk)
 begin
 
-if(i_reset_n = '0') then
+if(i_reset_n = '1') then
     r_cnt <= 0;
     clock_state <= '0';
 elsif(rising_edge(i_clk)) then
