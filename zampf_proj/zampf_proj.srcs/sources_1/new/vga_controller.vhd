@@ -1,21 +1,21 @@
 ----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
+-- Company:
+-- Engineer:
+--
 -- Create Date: 04.11.2023 22:58:47
--- Design Name: 
+-- Design Name:
 -- Module Name: vga_controller - Behavioral
--- Project Name: 
--- Target Devices: 
--- Tool Versions: 
--- Description: 
--- 
--- Dependencies: 
--- 
+-- Project Name:
+-- Target Devices:
+-- Tool Versions:
+-- Description:
+--
+-- Dependencies:
+--
 -- Revision:
 -- Revision 0.01 - File Created
 -- Additional Comments:
--- 
+--
 ----------------------------------------------------------------------------------
 
 
@@ -101,8 +101,8 @@ elsif(rising_edge(i_pixel_clk)) then
 
 	if(v_pulses_cnt < C_v_pixels) then
 	o_v_sync <= '1';
-		if(h_pulses_cnt < C_h_pixels) then 
-		-- visible pixels 
+		if(h_pulses_cnt < C_h_pixels) then
+		-- visible pixels
 		-- should be some data not just red
 
 			o_data_ack <= '1';
@@ -110,27 +110,27 @@ elsif(rising_edge(i_pixel_clk)) then
 			if(v_pulses_cnt = to_integer(unsigned(i_adc_data0)) + 40) then
 				o_r_sig <= "111";
 				o_b_sig <= "000";
-				o_g_sig <= "000";
+				o_g_sig <= "111";
 			else
 				o_r_sig <= "000";
 				o_b_sig <= "000";
 				o_g_sig <= "000";
 			end if;
-		
+
 		o_h_sync <= '1';
-		elsif(h_pulses_cnt >= C_h_pixels AND h_pulses_cnt < C_h_pixels + C_h_fp) then 
+		elsif(h_pulses_cnt >= C_h_pixels AND h_pulses_cnt < C_h_pixels + C_h_fp) then
 		-- star blanking
 		o_data_ack <= '0';
 		o_new_line <= '0';
 		o_h_sync <= '1';
 		o_r_sig <= "000";
 		o_b_sig <= "000";
-		o_g_sig <= "000";	
+		o_g_sig <= "000";
 		elsif(h_pulses_cnt >= C_h_pixels + C_h_fp AND h_pulses_cnt < C_h_pixels + C_h_fp + C_h_pulse) then
 		-- start Hsync pulse
 		o_h_sync <= '0';
-	
-	
+
+
 		elsif(h_pulses_cnt >= C_h_total - C_h_bp) then
 		-- end Hsync pulse
 		o_h_sync <= '1';
@@ -140,13 +140,13 @@ elsif(rising_edge(i_pixel_clk)) then
 		o_v_sync <= '1';
 		o_r_sig <= "000";
 		o_b_sig <= "000";
-		o_g_sig <= "000";	
+		o_g_sig <= "000";
 	elsif(v_pulses_cnt >= C_v_pixels + C_v_fp AND v_pulses_cnt < C_v_pixels + C_v_fp + C_v_pulse) then
 	o_v_sync <= '0';
 	elsif(v_pulses_cnt >= C_v_total - C_v_bp) then
 	o_v_sync <= '1';
 	end if;
-	
+
 end if;
 
 

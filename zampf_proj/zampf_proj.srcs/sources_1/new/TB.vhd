@@ -65,7 +65,7 @@ PORT MAP(
 	o_r_sig			=> o_r_sig,
 	o_b_sig			=> o_b_sig,
 	o_g_sig			=> o_g_sig,
-	o_new_line		=> o_new_line,
+	o_new_line		=> o_new_line
 	);
 
 clk_process : process

@@ -83,14 +83,15 @@ GENERIC MAP(
 	)
 PORT MAP(
 	i_clk 		=> i_clk,
+	i_reset_n   => i_reset,
 	o_clk 		=> div_clk
 	);
 
 
 master_spi_0 : ENTITY work.master_spi
 GENERIC MAP(
-	C_clk_ratio => 5,
-	C_data_length => 16
+	C_clk_ratio    => 5,
+	C_data_length  => 16
 	)
 PORT MAP(
 	i_clk		   => i_clk,
@@ -113,8 +114,7 @@ PORT MAP(
 
 
 adc_sim1 : ENTITY work.adc_sim
-GENERIC MAP(C_data_length => 16
-	)
+GENERIC MAP(C_data_length => 16)
 PORT MAP(
 	i_clk	=> spi_clk,
 	i_cs 	=> r_cs,
