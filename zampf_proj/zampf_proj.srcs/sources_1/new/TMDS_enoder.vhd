@@ -42,14 +42,21 @@ architecture Behavioral of TMDS_encoder is
   signal inner_data   : std_logic;
 begin
 
-  process (i_shift_clk)
+  process (i_shift_clk, i_clk)
   begin
-    if(data_index = BUS_LEN - 1) then
+    if(rising_edge(i_shift_clk)) then
+      if(data_index = BUS_LEN - 1) then
+        data_index <= 0;
+      else
+        data_index <= data_index + 1;
+      end if;
+    end if;
+
+    if(rising_edge(i_clk)) then
       data_index <= 0;
-    else
-      data_index <= data_index + 1;
     end if;
   end process;
+
   inner_data <= i_data(data_index) when data_index < DATA_LEN else '0';
   o_bit <= inner_data;
   o_n_bit <= not inner_data;

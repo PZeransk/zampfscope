@@ -1,17 +1,17 @@
 ----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
+-- Company:
+-- Engineer:
+--
 -- Create Date: 19.10.2023 16:24:05
--- Design Name: 
+-- Design Name:
 -- Module Name: TOP - Behavioral
--- Project Name: 
--- Target Devices: 
--- Tool Versions: 
--- Description: 
--- 
--- Dependencies: 
--- 
+-- Project Name:
+-- Target Devices:
+-- Tool Versions:
+-- Description:
+--
+-- Dependencies:
+--
 -- Revision:
 -- Revision 0.01 - File Created
 -- Additional Comments:
@@ -32,7 +32,7 @@ library UNISIM;
 use UNISIM.VComponents.all;
 
 entity TOP is
-    Port ( 
+    Port (
     i_clk 			: in  STD_LOGIC;
     i_reset 		: in  std_logic;
     i_enable_spi	: in  std_logic;
@@ -83,7 +83,7 @@ GENERIC MAP(
 	)
 PORT MAP(
 	i_clk 		=> i_clk,
-	i_reset_n   => i_reset,
+	i_reset_n   => not i_reset,
 	o_clk 		=> div_clk
 	);
 
@@ -96,7 +96,7 @@ GENERIC MAP(
 PORT MAP(
 	i_clk		   => i_clk,
 	i_reset_n	   => i_reset,
-	--i_cs 		   => 
+	--i_cs 		   =>
 	--i_enable	   => i_enable_spi,
 	i_enable	   => enable,
 	i_clk_polarity => clock_pol,
@@ -133,7 +133,7 @@ PORT MAP(
 	o_disp_ena 	=> o_disp_ena,
 	o_r_sig		=> o_r_sig,
 	o_b_sig		=> o_b_sig,
-	o_g_sig		=> o_g_sig,	
+	o_g_sig		=> o_g_sig,
 	o_data_clk  => meas_data_clk,
 	o_data_ack  => data_ack,
 	o_new_line  => o_new_line
@@ -146,14 +146,14 @@ PORT MAP(
 	i_reset_n		=> i_reset,
 	i_trigger_n 	=> i_trigger_n,
 	i_data_ack 		=> data_ack,
-	--i_h_sync		=> 
+	--i_h_sync		=>
 	--i_v_sync		=> o_v_sync,
 	i_spi_data0		=> spi_data_0,
 	i_spi_data1		=> spi_data_1,
 	o_image_data0	=> data_reg,
 	o_adc_enable  	=> enable
-	--o_end_meas	=> 
-	--o_image_data	=> 
+	--o_end_meas	=>
+	--o_image_data	=>
 	);
 
 

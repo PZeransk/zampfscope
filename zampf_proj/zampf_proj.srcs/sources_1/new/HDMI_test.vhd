@@ -45,25 +45,27 @@ Generic (
   vsync_size      : integer := 2
 );
 Port (
-  i_pxl_clk : in std_logic;
-  i_reset_n : in std_logic;
-  -- i_rgb_pixel : std_logic_vector (23 downto 0);
-  i_rgb_pixel: in std_logic_vector(23 downto 0);
-  o_tmds_all: out std_logic_vector(7 downto 0) -- (r, r, g, g, b, b, clk, clk)
-);
+  i_pxl_clk   : in std_logic;
+  i_reset_n   : in std_logic;
+  o_tmds_all  : out std_logic_vector(7 downto 0); -- (r, r, g, g, b, b, clk, clk)
+
+  i_rgb_pixel : in std_logic_vector(23 downto 0);
+  o_curr_x    : out integer range 0 to img_width;
+  o_curr_y    : out integer range 0 to img_height
+  );
 end HDMI_test;
 
 architecture Behavioral of HDMI_test is
-component clock_divider is
-  GENERIC (
-  C_cnt_div	:	  integer
-  );
-   PORT (
-   i_clk 		: in  std_logic;
-   o_clk		: out std_logic;
-   i_reset_n   : in std_logic
-    );
-end component;
+-- component clock_divider is
+--   GENERIC (
+--   C_cnt_div	:	  integer
+--   );
+--    PORT (
+--    i_clk 		: in  std_logic;
+--    o_clk		: out std_logic;
+--    i_reset_n   : in std_logic
+--     );
+-- end component;
 
 -- component TMDS_encoder is
 --   Generic (
@@ -89,17 +91,10 @@ signal v_sync       : std_logic;
 signal r_pixel    : std_logic_vector(9 downto 0);
 signal g_pixel    : std_logic_vector(9 downto 0);
 signal b_pixel    : std_logic_vector(9 downto 0);
-signal TMDS_buff : std_logic_vector(7 downto 0);
-signal TMDS_r     : std_logic;
-signal TMDS_rn     : std_logic;
-signal TMDS_g     : std_logic;
-signal TMDS_gn     : std_logic;
-signal TMDS_b     : std_logic;
-signal TMDS_bn     : std_logic;
-
-
+signal TMDS_buff  : std_logic_vector(7 downto 0);
+signal TDMS_ena   : std_logic;
 begin
-  clk_div_internal : clock_divider
+  clk_div_internal : ENTITY work.clock_divider
   generic map (
     C_cnt_div => 5
   )
@@ -149,14 +144,14 @@ begin
   TMDS_buff(0) <= not clk_pixel_x5;
   o_tmds_all <= TMDS_buff;
 
-  process(i_pxl_clk, i_reset_n)
+  process(clk_pixel_x5, i_reset_n)
   begin
     if (i_reset_n = '0') then
       x_img <= 0;
       y_img <= 0;
       x_total <= 0;
       y_total <= 0;
-    elsif(rising_edge(i_pxl_clk)) then
+    elsif(rising_edge(clk_pixel_x5)) then
       --(y_total, x_total) <= (0, x_total+1) when y_total = frame_width else (y_total + 1, x_total);
       if(x_total = frame_width - 1) then
         x_total <= 0;
@@ -197,6 +192,8 @@ begin
   -- end process;
 
   -- signal assignment:
+  o_curr_x <= x_img;
+  o_curr_y <= y_img;
   h_sync <= '1' when (x_total >= img_width + hsync_start and x_total < img_width + hsync_start + hsync_size) else '0';
   v_sync <= '1' when (y_total >= img_height + vsync_start and y_total < img_height + vsync_start + vsync_size) else '0';
 

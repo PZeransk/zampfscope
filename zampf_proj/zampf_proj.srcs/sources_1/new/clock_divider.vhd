@@ -1,21 +1,21 @@
 ----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
+-- Company:
+-- Engineer:
+--
 -- Create Date: 21.10.2023 11:41:06
--- Design Name: 
--- Module Name: clock_divider - 
--- Project Name: 
--- Target Devices: 
--- Tool Versions: 
--- Description: 
--- 
--- Dependencies: 
--- 
+-- Design Name:
+-- Module Name: clock_divider -
+-- Project Name:
+-- Target Devices:
+-- Tool Versions:
+-- Description:
+--
+-- Dependencies:
+--
 -- Revision:
 -- Revision 0.01 - File Created
 -- Additional Comments:
--- 
+--
 ----------------------------------------------------------------------------------
 
 
@@ -48,10 +48,10 @@ SIGNAL r_cnt		:   integer RANGE 0 TO C_cnt_div - 1 := 0;
 SIGNAL clock_state	:	std_logic := '0';
 
 begin
-process(i_clk)
+process(i_clk, i_reset_n)
 begin
 
-if(i_reset_n = '1') then
+if(i_reset_n = '0') then
     r_cnt <= 0;
     clock_state <= '0';
 elsif(rising_edge(i_clk)) then
