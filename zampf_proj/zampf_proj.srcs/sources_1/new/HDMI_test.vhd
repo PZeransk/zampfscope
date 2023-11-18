@@ -56,30 +56,12 @@ Port (
 end HDMI_test;
 
 architecture Behavioral of HDMI_test is
--- component clock_divider is
---   GENERIC (
---   C_cnt_div	:	  integer
---   );
---    PORT (
---    i_clk 		: in  std_logic;
---    o_clk		: out std_logic;
---    i_reset_n   : in std_logic
---     );
--- end component;
+constant r_index : integer := 2;
+constant g_index : integer := 1;
+constant b_index : integer := 0;
 
--- component TMDS_encoder is
---   Generic (
---     DATA_LEN  : integer;
---     BUS_LEN   : integer
---   );
---   Port(
---     i_clk       : in std_logic;
---     i_shift_clk : in std_logic;
---     i_data      : in std_logic_vector(DATA_LEN downto 0);
---     o_bit       : out std_logic;
---     o_n_bit     : out std_logic
---   );
--- end component;
+type rgb_array      is array (0 to 2) of std_logic_vector(7 downto 0);
+type TMDS_data_out  is array (0 to 2) of std_logic_vector(9 downto 0);
 
 signal clk_pixel_x5 : std_logic;
 signal x_img        : integer range 0 to img_width; -- range(0, img_width) -- variables that shows which
@@ -88,11 +70,15 @@ signal x_total      : integer range 0 to frame_width;
 signal y_total      : integer range 0 to frame_height;
 signal h_sync       : std_logic;
 signal v_sync       : std_logic;
-signal r_pixel    : std_logic_vector(9 downto 0);
-signal g_pixel    : std_logic_vector(9 downto 0);
-signal b_pixel    : std_logic_vector(9 downto 0);
-signal TMDS_buff  : std_logic_vector(7 downto 0);
-signal TDMS_ena   : std_logic;
+signal rgb_pixel    : rgb_array;
+signal r_pixel      : std_logic_vector(7 downto 0);
+signal g_pixel      : std_logic_vector(7 downto 0);
+signal b_pixel      : std_logic_vector(7 downto 0);
+signal tmds_signals : TMDS_data_out;
+
+signal TDMS_ena     : std_logic;
+signal video_enable : std_logic;
+
 begin
   clk_div_internal : ENTITY work.clock_divider
   generic map (
@@ -104,45 +90,49 @@ begin
     o_clk => clk_pixel_x5
   );
 
-  TMDS_red : ENTITY work.TMDS_encoder
-  generic map(
-    DATA_LEN    => 10,
-    BUS_LEN     => 10)
-  port map(
-  i_clk         => clk_pixel_x5,
-  i_shift_clk   => i_pxl_clk,
-  i_data        => r_pixel,
-  o_bit         => TMDS_buff(7),
-  o_n_bit       => TMDS_buff(6)
-  );
+  TMDS_rgb_encoders: for i in 0 to 2 generate
 
-  TMDS_green : ENTITY work.TMDS_encoder
-  generic map(
-    DATA_LEN    => 10,
-    BUS_LEN     => 10)
-  port map(
-  i_clk         => clk_pixel_x5,
-  i_shift_clk   => i_pxl_clk,
-  i_data        => g_pixel,
-  o_bit         => TMDS_buff(5),
-  o_n_bit       => TMDS_buff(4)
-  );
+    HV_SYNC : if (i = b_index) generate
+      TMDS: entity work.TMDS_Encoder
+        port map (
+          PixelClk    => clk_pixel_x5,
+          SerialClk   => '0',
+          aRst        => '0',
+          pDataOutRaw => tmds_signals(i),
+          pDataOut    => rgb_pixel(i),
+          pC0         => h_sync,
+          pC1         => v_sync,
+          pVde        => video_enable
+        );
+    end generate HV_SYNC;
 
-  TMDS_blue : ENTITY work.TMDS_encoder
-  generic map(
-    DATA_LEN    => 10,
-    BUS_LEN     => 10)
-  port map(
-  i_clk         => clk_pixel_x5,
-  i_shift_clk   => i_pxl_clk,
-  i_data        => b_pixel,
-  o_bit         => TMDS_buff(3),
-  o_n_bit       => TMDS_buff(2)
-  );
+    COLOR : if (i /= b_index) generate
+      TMDS: entity work.TMDS_Encoder
+        port map (
+          PixelClk    => clk_pixel_x5,
+          SerialClk   => '0',
+          aRst        => '0',
+          pDataOutRaw => tmds_signals(i),
+          pDataOut    => rgb_pixel(i),
+          pC0         => '0',
+          pC1         => '0',
+          pVde        => video_enable
+        );
+    end generate COLOR;
 
-  TMDS_buff(1) <= clk_pixel_x5;
-  TMDS_buff(0) <= not clk_pixel_x5;
-  o_tmds_all <= TMDS_buff;
+    -- serializer generate
+    RGB_serializer : entity work.serializer
+    port map (
+      i_clk       => clk_pixel_x5,
+      i_shift_clk => i_pxl_clk,
+      i_data      => tmds_signals(i),
+      o_bit       => o_tmds_all(7 - 2*i),
+      o_n_bit     => o_tmds_all(6 - 2*i)
+    );
+  end generate TMDS_rgb_encoders;
+
+  o_tmds_all(1) <= clk_pixel_x5;
+  o_tmds_all(0) <= not clk_pixel_x5;
 
   process(clk_pixel_x5, i_reset_n)
   begin
@@ -179,26 +169,29 @@ begin
     end if;
   end process;
 
-  -- drawing process
-  -- process(i_pxl_clk, y_total, x_total)
-  -- begin
-  --
-  -- end process;
-
-  -- get pixel process
-  -- process(rising_edge(clk_pixel_x5))
-  -- begin
-
-  -- end process;
-
   -- signal assignment:
   o_curr_x <= x_img;
   o_curr_y <= y_img;
   h_sync <= '1' when (x_total >= img_width + hsync_start and x_total < img_width + hsync_start + hsync_size) else '0';
   v_sync <= '1' when (y_total >= img_height + vsync_start and y_total < img_height + vsync_start + vsync_size) else '0';
+  video_enable <= '1' when (x_total < img_width) and (y_total < img_height) else '0';
 
-  r_pixel <= (i_rgb_pixel(23 downto 16) & "00") when rising_edge(clk_pixel_x5) else r_pixel;
-  g_pixel <= (i_rgb_pixel(15 downto 8) & "00") when rising_edge(clk_pixel_x5) else g_pixel;
-  b_pixel <= (i_rgb_pixel(7 downto 0) & h_sync & v_sync) when rising_edge(clk_pixel_x5) else b_pixel;
+  --! WARNING: Assigning pixel with clock will generate one clock tic delay!!
+  COLOR_ASSIGNMENT: for i in 0 to 2 generate
+    rgb_pixel(i) <= (i_rgb_pixel((i + 1)*8 - 1 downto (i)*8)) when rising_edge(clk_pixel_x5) else rgb_pixel(i);
+  end generate COLOR_ASSIGNMENT;
+
+  --should generate something like:
+    --should generate something like:
+  -- rgb_pixel(r_index) <= (i_rgb_pixel(23 downto 16)) when rising_edge(clk_pixel_x5) else rgb_pixel(r_index);
+  -- rgb_pixel(g_index) <= (i_rgb_pixel(15 downto 8)) when rising_edge(clk_pixel_x5) else rgb_pixel(g_index);
+  -- rgb_pixel(b_index) <= (i_rgb_pixel(7 downto 0)) when rising_edge(clk_pixel_x5) else rgb_pixel(b_index);
+
+  --r_pixel <= (i_rgb_pixel(23 downto 16)) when rising_edge(clk_pixel_x5) else r_pixel;
+  --g_pixel <= (i_rgb_pixel(15 downto 8))  when rising_edge(clk_pixel_x5) else g_pixel;
+  --b_pixel <= (i_rgb_pixel(7 downto 0))   when rising_edge(clk_pixel_x5) else b_pixel;
+  --rgb_pixel(r_index) <= r_pixel;
+  --rgb_pixel(g_index) <= g_pixel;
+  --rgb_pixel(b_index) <= b_pixel;
 
 end Behavioral;

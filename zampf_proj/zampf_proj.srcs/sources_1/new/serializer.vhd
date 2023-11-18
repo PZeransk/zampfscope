@@ -4,7 +4,7 @@
 --
 -- Create Date: 05.11.2023 23:04:16
 -- Design Name:
--- Module Name: TMDS_encoder - Behavioral
+-- Module Name: serializer - Behavioral
 -- Project Name:
 -- Target Devices:
 -- Tool Versions:
@@ -22,7 +22,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.numeric_std.all;
 
-entity TMDS_encoder is
+entity serializer is
   Generic (
     DATA_LEN  : integer := 10;
     BUS_LEN   : integer := 10
@@ -37,7 +37,7 @@ entity TMDS_encoder is
 end entity;
 
 
-architecture Behavioral of TMDS_encoder is
+architecture Behavioral of serializer is
   signal data_index   : integer range 0 to BUS_LEN := 0;
   signal inner_data   : std_logic;
 begin
