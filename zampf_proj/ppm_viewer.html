@@ -1,0 +1,120 @@
+
+<head>
+  <style>
+
+  </style>
+</head>
+
+<body>
+
+<canvas id="ppm-image" width="640" height="480"></canvas>
+<div>
+<button id="reload-ppm">reload File</button>
+</div>
+
+<div id="plain-ppm"></div>
+
+
+<script>
+  const PPMfilePath = "zampf_proj.sim\\sim_1\\behav\\xsim\\image_out.ppm"
+
+  const canvas = document.getElementById("ppm-image");
+  let ppm_file = null;
+
+  const ppm = {
+    width : 0,
+    heignt : 0,
+    colorRange: 0,
+    pixels : []
+  };
+  async function delay(time) {
+    return new Promise(resolve => setTimeout(resolve, time));
+  }
+
+  async function reloadFile() {
+    await delay(2000);
+    return fetch(PPMfilePath).then((res) => res.text());
+  }
+
+  const getColorIndicesForCoord = (x, y, width) => {
+    const red = y * (width * 4) + x * 4;
+    return [red, red + 1, red + 2, red + 3];
+  };
+
+  function filterPPMComments(plainTxt) {
+    let lines = plainTxt.split('\n');
+    lines.splice(0, 1);
+    lines.forEach((element, index) => {
+      const strComm = element.split('#');
+      lines[index] = strComm[0];
+    });
+    const dd = lines.filter((el) => {return el.length != 0});
+    //console.log(dd);
+    return dd;
+  }
+
+  function processPPM(plainTxt) {
+    const rawContent = filterPPMComments(plainTxt);
+    const wh = rawContent[0].split(' ');
+    try {
+      ppm.width = parseInt(wh[0]);
+      ppm.heignt = parseInt(wh[1]);
+    } catch(e) {
+      console.error("cannot read width/heiht from ppm file");
+      console.error(e);
+    }
+
+    try {
+      ppm.colorRange = parseInt(rawContent[1]);
+    } catch(e) {
+      console.error("cannot read color range from ppm file");
+      console.error(e);
+    }
+    rawContent.splice(0, 2);
+    console.log(rawContent.join(' ').replace(/\s\s+/g, ' ').split(' ').filter((el) => el.length == 0))
+    ppm.pixels = rawContent.join(' ').replace(/\s\s+/g, ' ').split(' ').filter((el) => el.length != 0).map((item) => parseInt(item));
+    console.log(ppm);
+    return ppm;
+  }
+
+  function generateImage() {
+    //console.log(ppm.width*ppm.heignt*3, ' vs ', ppm.pixels.length)
+    if(ppm.width*ppm.heignt*3 > ppm.pixels.length) {
+      console.error("too few pixels in ppm file, to display");
+      return;
+    }
+    const ctx = canvas.getContext('2d');
+    const imgData = ctx.createImageData(ppm.width, ppm.heignt);
+    let indexPPM = 0;
+    for (let index = 0; index < imgData.data.length; index+=4) {
+      imgData.data[index] = Math.floor(ppm.pixels[indexPPM]/(ppm.colorRange - 1)*255);
+      imgData.data[index + 1] = Math.floor(ppm.pixels[indexPPM + 1]/(ppm.colorRange - 1)*255);
+      imgData.data[index + 2] = Math.floor(ppm.pixels[indexPPM + 2]/(ppm.colorRange - 1)*255);
+      imgData.data[index + 3] = 255;
+      indexPPM += 3;
+    }
+    const data = ppm.pixels.map((el) => Math.floor(el/(ppm.colorRange - 1)*255));
+    //console.log(data.filter((el) => el != 0));
+    ppm.pixels.length = ppm.width*ppm.heignt*3;
+    //canvas.width = ppm.width;
+    //canvas.heignt = ppm.heignt;
+    // new ImageData(new Uint8ClampedArray(ppm.pixels), ppm.width, ppm.heignt, {colorSpace:"display-p3"})
+    ctx.putImageData(imgData,0,0);
+    ctx.scale(2, 2);
+  }
+
+  reloadFile().then((text) => {
+    //console.log(text);
+    processPPM(text);
+    generateImage();
+    document.getElementById("plain-ppm").innerHTML =
+      `PPM file raw content: <br>
+      ${[ppm.width, ppm.heignt].join(' ')} <br>
+      ${ppm.colorRange} <br> table [0 .. ${ppm.pixels.length}]`;
+  }).catch((e) => {
+    console.error(e);
+    //document.getElementById("plain-ppm").innerHTML = ;
+  });
+
+</script>
+</body>
