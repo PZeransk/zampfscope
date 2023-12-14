@@ -40,6 +40,7 @@ end entity;
 architecture Behavioral of serializer is
   signal data_index   : integer range 0 to BUS_LEN := 0;
   signal inner_data   : std_logic;
+  signal data_latch   : std_logic_vector(9 downto 0);
 begin
 
   process (i_shift_clk, i_clk)
@@ -53,11 +54,12 @@ begin
     end if;
 
     if(rising_edge(i_clk)) then
+      data_latch <= i_data;
       data_index <= 0;
     end if;
   end process;
 
-  inner_data <= i_data(data_index) when data_index < DATA_LEN else '0';
+  inner_data <= data_latch(data_index) when data_index < DATA_LEN else '0';
   o_bit <= inner_data;
   o_n_bit <= not inner_data;
 

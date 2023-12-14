@@ -51,7 +51,8 @@ Port (
 
   i_rgb_pixel : in std_logic_vector(23 downto 0);
   o_curr_x    : out integer range 0 to img_width;
-  o_curr_y    : out integer range 0 to img_height
+  o_curr_y    : out integer range 0 to img_height;
+  blanking    : out std_logic
   );
 end HDMI_test;
 
@@ -66,6 +67,8 @@ type TMDS_data_out  is array (0 to 2) of std_logic_vector(9 downto 0);
 signal clk_pixel_x5 : std_logic;
 signal x_img        : integer range 0 to img_width; -- range(0, img_width) -- variables that shows which
 signal y_img        : integer range 0 to img_height; -- range(0,img_height) -- pixel of screen is printed
+signal x_last       : integer range 0 to img_width;
+signal y_last       : integer range 0 to img_height;
 signal x_total      : integer range 0 to frame_width;
 signal y_total      : integer range 0 to frame_height;
 signal h_sync       : std_logic;
@@ -78,6 +81,7 @@ signal tmds_signals : TMDS_data_out;
 
 signal TDMS_ena     : std_logic;
 signal video_enable : std_logic;
+--signal proceed_image: std_logic;
 
 begin
   clk_div_internal : ENTITY work.clock_divider
@@ -134,6 +138,25 @@ begin
   o_tmds_all(1) <= clk_pixel_x5;
   o_tmds_all(0) <= not clk_pixel_x5;
 
+  -- process(clk_pixel_x5, i_pxl_clk, i_reset_n)
+  --   variable next_pxl_signal_state : integer range 0 to 3 := 3;
+  -- begin
+  --   if(i_reset_n ='0') then
+  --       next_pxl_signal_state  := 3;
+  --       proceed_image <= '0';
+  --   else
+  --     if(rising_edge(clk_pixel_x5)) then
+  --       next_pxl_signal_state  := 0;
+  --     elsif(rising_edge(i_pxl_clk) and next_pxl_signal_state  = 0) then
+  --       next_pxl_signal_state  := 1;
+  --       proceed_image <= '1';
+  --     elsif(rising_edge(i_pxl_clk) and next_pxl_signal_state  = 1) then
+  --       next_pxl_signal_state  := 3;
+  --       proceed_image <= '0';
+  --     end if;
+  --   end if;
+  -- end process;
+
   process(clk_pixel_x5, i_reset_n)
   begin
     if (i_reset_n = '0') then
@@ -175,18 +198,27 @@ begin
   h_sync <= '1' when (x_total >= img_width + hsync_start and x_total < img_width + hsync_start + hsync_size) else '0';
   v_sync <= '1' when (y_total >= img_height + vsync_start and y_total < img_height + vsync_start + vsync_size) else '0';
   video_enable <= '1' when (x_total < img_width) and (y_total < img_height) else '0';
-
+  blanking <= not video_enable;
   --! WARNING: Assigning pixel with clock will generate one clock tic delay!!
-  COLOR_ASSIGNMENT: for i in 0 to 2 generate
-    rgb_pixel(i) <= (i_rgb_pixel((i + 1)*8 - 1 downto (i)*8)) when rising_edge(clk_pixel_x5) else rgb_pixel(i);
-  end generate COLOR_ASSIGNMENT;
+  --COLOR_ASSIGNMENT: for i in 0 to 2 generate
+  --  rgb_pixel(i) <= (i_rgb_pixel((i + 1)*8 - 1 downto (i)*8)) when rising_edge(clk_pixel_x5) else rgb_pixel(i);
+  --end generate COLOR_ASSIGNMENT;
 
   --should generate something like:
     --should generate something like:
+
   -- rgb_pixel(r_index) <= (i_rgb_pixel(23 downto 16)) when rising_edge(clk_pixel_x5) else rgb_pixel(r_index);
   -- rgb_pixel(g_index) <= (i_rgb_pixel(15 downto 8)) when rising_edge(clk_pixel_x5) else rgb_pixel(g_index);
   -- rgb_pixel(b_index) <= (i_rgb_pixel(7 downto 0)) when rising_edge(clk_pixel_x5) else rgb_pixel(b_index);
 
+  rgb_latch_process: process(clk_pixel_x5)
+  begin
+    if rising_edge(clk_pixel_x5) then
+      rgb_pixel(r_index) <= (i_rgb_pixel(23 downto 16));
+      rgb_pixel(g_index) <= (i_rgb_pixel(15 downto 8));
+      rgb_pixel(b_index) <= (i_rgb_pixel(7 downto 0));
+    end if;
+  end process;
   --r_pixel <= (i_rgb_pixel(23 downto 16)) when rising_edge(clk_pixel_x5) else r_pixel;
   --g_pixel <= (i_rgb_pixel(15 downto 8))  when rising_edge(clk_pixel_x5) else g_pixel;
   --b_pixel <= (i_rgb_pixel(7 downto 0))   when rising_edge(clk_pixel_x5) else b_pixel;
