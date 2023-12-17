@@ -73,10 +73,10 @@ signal x_total      : integer range 0 to frame_width;
 signal y_total      : integer range 0 to frame_height;
 signal h_sync       : std_logic;
 signal v_sync       : std_logic;
-signal rgb_pixel    : rgb_array;
-signal r_pixel      : std_logic_vector(7 downto 0);
-signal g_pixel      : std_logic_vector(7 downto 0);
-signal b_pixel      : std_logic_vector(7 downto 0);
+signal rgb_pixel    : rgb_array := (others => (others => '0') ) ;
+-- signal r_pixel      : std_logic_vector(7 downto 0);
+-- signal g_pixel      : std_logic_vector(7 downto 0);
+-- signal b_pixel      : std_logic_vector(7 downto 0);
 signal tmds_signals : TMDS_data_out;
 
 signal TDMS_ena     : std_logic;

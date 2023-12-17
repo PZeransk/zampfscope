@@ -48,7 +48,7 @@ SIGNAL r_cnt		:   integer RANGE 0 TO C_cnt_div - 1 := 0;
 SIGNAL clock_state	:	std_logic := '0';
 
 begin
-process(i_clk, i_reset_n)
+process(i_clk, i_reset_n, clock_state)
 begin
 
 if(i_reset_n = '0') then

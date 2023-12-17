@@ -39,38 +39,47 @@ architecture behavioral of HDMI_TB is
 
 
   signal clk_250MHz         : std_logic := '0';
-  signal pixel_clock        : std_logic := '0';
-  signal reset_n            : std_logic := '1';
+  signal img_pixel_clock        : std_logic := '0';
+  signal reset              : std_logic := '0';
   signal curr_RGB           : std_logic_vector(23 downto 0);
   signal tmds_all           : std_logic_vector(7 downto 0);
-  signal curr_x, curr_y     : integer;
-  
+  --signal curr_x, curr_y     : integer;
+
   signal blanking           : std_logic;
   signal image_cnt 	: integer range 0 to C_image_legnth := 0;
 begin
 
-DUT : entity work.HDMI_test
-generic map (
-  img_width   => IMG_WIDTH,
-  img_height  => IMG_HEIGHT
-)
-port map (
-  i_pxl_clk   => clk_250MHz,
-  i_reset_n   => reset_n,
-  o_tmds_all  => tmds_all,
-  i_rgb_pixel => curr_RGB,
-  o_curr_x    => curr_x,
-  o_curr_y    => curr_y,
-  blanking    => blanking
-);
+-- DUT : entity work.HDMI_test
+-- generic map (
+--   img_width   => IMG_WIDTH,
+--   img_height  => IMG_HEIGHT
+-- )
+-- port map (
+--   i_pxl_clk   => clk_250MHz,
+--   i_reset_n   => reset_n,
+--   o_tmds_all  => tmds_all,
+--   i_rgb_pixel => curr_RGB,
+--   o_curr_x    => curr_x,
+--   o_curr_y    => curr_y,
+--   blanking    => blanking
+-- );
 
-image_generator : entity work.HDMI_image_gen
-generic map (IMG_WIDTH, IMG_HEIGHT)
-port map (
-  i_clk   => clk_250MHz,  -- can be this clock, can be 25MHz clock... both will work
-  i_x     => curr_x,
-  i_y     => curr_y,
-  o_rgb   => curr_RGB
+-- image_generator : entity work.HDMI_image_gen
+-- generic map (IMG_WIDTH, IMG_HEIGHT)
+-- port map (
+--   i_clk   => clk_250MHz,  -- can be this clock, can be 25MHz clock... both will work
+--   i_x     => curr_x,
+--   i_y     => curr_y,
+--   o_rgb   => curr_RGB
+-- );
+
+DUT: entity work.HDMI_TOP
+port map(
+  clk_250MHZ    =>  clk_250MHz,
+  i_reset       =>  reset,
+  o_curr_RGB    =>  curr_RGB,
+  o_tmds        =>  tmds_all,
+  o_video_ena   =>  blanking
 );
 
 clk_sim: process
@@ -83,13 +92,13 @@ end process;
 
 clk_pixel_pr: process
 begin
-  pixel_clock <= '0';
+  img_pixel_clock <= '0';
   wait for clock_period/2*10;
-  pixel_clock <= '1';
+  img_pixel_clock <= '1';
   wait for clock_period/2*10;
 end process;
 
-file_save : process(pixel_clock, blanking)
+file_save : process(img_pixel_clock, blanking)
 
     file     response_file     : text;
     constant response_filename : string  := "image_out.ppm";
@@ -120,7 +129,7 @@ begin
     writeline(response_file, l_o);
     end if;
 
-    if(rising_edge(pixel_clock) AND blanking /= '1') then
+    if(rising_edge(img_pixel_clock) AND blanking = '1') then
     	if(image_cnt <= C_image_legnth) then
             write (l_o, to_integer(unsigned(curr_RGB(23 downto 16))));
             write (l_o, string'(" "));
@@ -130,7 +139,7 @@ begin
             write (l_o, string'("  "));
             write (response_file, l_o.all);
             deallocate(l_o);
-            --l_o := new string'("");
+            l_o := new string'("");
             --write (response_file, string(l_o));
             --l_o'clear;
             image_cnt <= image_cnt + 1;
