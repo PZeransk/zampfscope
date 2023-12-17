@@ -139,7 +139,7 @@ begin
             write (l_o, string'("  "));
             write (response_file, l_o.all);
             deallocate(l_o);
-            l_o := new string'("");
+           -- l_o := new string'("");
             --write (response_file, string(l_o));
             --l_o'clear;
             image_cnt <= image_cnt + 1;

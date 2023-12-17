@@ -45,12 +45,14 @@ Port (
 	i_cs 			:	in 	std_logic;
 	i_reset_n		:	in 	std_logic;
 	i_trigger_n 	:	in 	std_logic;
-	i_data_ack		:   in  std_logic;
+
+	i_x_pixel 		: 	in  integer;
 	--i_h_sync		: 	in 	std_logic;
 	--i_v_sync		:	in 	std_logic;
 	i_spi_data0		:	in 	std_logic_vector(C_data_length - 1 downto 0);
 	i_spi_data1		:	in 	std_logic_vector(C_data_length - 1 downto 0);
 	o_image_data0	:	out std_logic_vector(C_resolution - 1 downto 0);
+	o_image_data1	:	out std_logic_vector(C_resolution - 1 downto 0);
 	o_adc_enable 	: 	out std_logic
 	--o_end_meas		:	out	std_logic;
 	--o_image_data	:	out	std_logic
@@ -72,7 +74,8 @@ signal pixel_height			: integer range 0 to C_pixel_height := 0;
 signal pixel_cnt			: integer range 0 to C_pixel_widht := 0;
 signal data_send_cnt		: integer range 0 to C_pixel_widht := 0;
 --signal v_data_reg	: std_logic_vector(C_pixel_height - 1 downto 0) := (others => '0');
-signal MY_IMAGE		: T_IMAGE;
+signal MY_IMAGE_0		: T_IMAGE;
+signal MY_IMAGE_1		: T_IMAGE;
 signal image_state : T_states;
 --signal MY_BIN_IMG	: T_IMAGE_BINARY := (others => (others => '0'));
 
@@ -108,11 +111,12 @@ case image_state is
 		o_adc_enable <= '1';
 			if(falling_edge(i_cs)) then
 			
-					if (pixel_cnt < C_pixel_widht - 1) then
+					if (pixel_cnt < C_pixel_widht) then
 	
 					r_spi_data0 <= i_spi_data0(i_spi_data0'low + 11 downto i_spi_data0'low + 4);
 					r_spi_data1 <= i_spi_data1(i_spi_data1'low + 11 downto i_spi_data1'low + 4);
-					MY_IMAGE(pixel_cnt) <= r_spi_data0;
+					MY_IMAGE_0(pixel_cnt) <= r_spi_data0;
+					MY_IMAGE_1(pixel_cnt) <= r_spi_data1;
 					--pixel_height <= to_integer(unsigned(r_spi_data0));
 	
 					pixel_cnt <= pixel_cnt + 1;
@@ -132,12 +136,9 @@ case image_state is
 	when SEND =>
 		if(i_trigger_n = '0') then
 		if(rising_edge(i_clk)) then
-			if(data_send_cnt < C_pixel_widht - 1  AND i_data_ack = '1') then
-				o_image_data0 <= MY_IMAGE(data_send_cnt);
-				data_send_cnt <= data_send_cnt + 1;
-			else
-				data_send_cnt <= 0;
-			end if;
+			
+				o_image_data0 <= MY_IMAGE_0(i_x_pixel);
+				o_image_data1 <= MY_IMAGE_1(i_x_pixel);
 		end if;
 		else
 		image_state <= IDLE;
@@ -162,10 +163,10 @@ end process; -- gen_image
 --		if(data_send_cnt = C_pixel_widht -1) then
 --			data_send_cnt <= 0;
 --		else
---			o_image_data0 <= MY_IMAGE(data_send_cnt);
+--			o_image_data0 <= MY_IMAGE_0(data_send_cnt);
 --			data_send_cnt <= data_send_cnt + 1;
 --		end if;
---	--MY_IMAGE(pixel_cnt) <= pixel_height;
+--	--MY_IMAGE_0(pixel_cnt) <= pixel_height;
 --	--pixel_cnt <= pixel_cnt + 1;
 --	--v_data_reg <= (others => '0');
 --	end if;

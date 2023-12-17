@@ -107,7 +107,7 @@ elsif(rising_edge(i_pixel_clk)) then
 
 			o_data_ack <= '1';
 			o_new_line <= '1';
-			if(v_pulses_cnt = to_integer(unsigned(i_adc_data0)) + 40) then
+			if(v_pulses_cnt = to_integer(unsigned(i_adc_data0)) + 112) then
 				o_r_sig <= "111";
 				o_b_sig <= "000";
 				o_g_sig <= "111";
