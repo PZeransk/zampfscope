@@ -71,16 +71,16 @@ signal x_last       : integer range 0 to img_width;
 signal y_last       : integer range 0 to img_height;
 signal x_total      : integer range 0 to frame_width;
 signal y_total      : integer range 0 to frame_height;
-signal h_sync       : std_logic;
-signal v_sync       : std_logic;
+signal h_sync       : std_logic := '0';
+signal v_sync       : std_logic := '0';
 signal rgb_pixel    : rgb_array := (others => (others => '0') ) ;
 -- signal r_pixel      : std_logic_vector(7 downto 0);
 -- signal g_pixel      : std_logic_vector(7 downto 0);
 -- signal b_pixel      : std_logic_vector(7 downto 0);
-signal tmds_signals : TMDS_data_out;
+signal tmds_signals : TMDS_data_out :=(others => (others => '0') ) ;
 
 signal TDMS_ena     : std_logic;
-signal video_enable : std_logic;
+signal video_enable : std_logic := '0';
 --signal proceed_image: std_logic;
 
 begin
@@ -192,14 +192,57 @@ begin
     end if;
   end process;
 
+
+
+
+
+  hv_sync_vena : process(clk_pixel_x5, i_reset_n)
+  begin
+    if (i_reset_n = '0') then
+      h_sync <= '0';
+      v_sync <= '0';
+      video_enable <= '0';
+    elsif (rising_edge(clk_pixel_x5)) then
+      if (x_total >= img_width + hsync_start and x_total < img_width + hsync_start + hsync_size) then
+        h_sync <= '1';
+      else
+        h_sync <= '0';
+      end if;
+
+      if (y_total >= img_height + vsync_start and y_total < img_height + vsync_start + vsync_size) then
+        v_sync <= '1';
+      else
+        v_sync <= '0';
+      end if;
+
+      if (x_total < img_width) and (y_total < img_height) then
+        video_enable <= '1';
+      else
+        video_enable <= '0';
+      end if;
+      -- this beauty cannot be compiled, sad :,(
+      -- h_sync <= '1' when (x_total >= img_width + hsync_start and x_total < img_width + hsync_start + hsync_size);
+      -- v_sync <= '1' when (y_total >= img_height + vsync_start and y_total < img_height + vsync_start + vsync_size);
+      -- video_enable <= '1' when (x_total < img_width) and (y_total < img_height);
+    end if;
+  end process;
+
+  rgb_latch_process: process(clk_pixel_x5)
+  begin
+    if rising_edge(clk_pixel_x5) then
+      rgb_pixel(r_index) <= (i_rgb_pixel(23 downto 16));
+      rgb_pixel(g_index) <= (i_rgb_pixel(15 downto 8));
+      rgb_pixel(b_index) <= (i_rgb_pixel(7 downto 0));
+    end if;
+  end process;
+
   -- signal assignment:
   o_curr_x <= x_img;
   o_curr_y <= y_img;
-  h_sync <= '1' when (x_total >= img_width + hsync_start and x_total < img_width + hsync_start + hsync_size) else '0';
-  v_sync <= '1' when (y_total >= img_height + vsync_start and y_total < img_height + vsync_start + vsync_size) else '0';
-  video_enable <= '1' when (x_total < img_width) and (y_total < img_height) else '0';
   blanking <= not video_enable;
-  --! WARNING: Assigning pixel with clock will generate one clock tic delay!!
+
+  --! WARNING: Asynchronous assigning pixel with clock will generate one clock tic delay!!
+
   --COLOR_ASSIGNMENT: for i in 0 to 2 generate
   --  rgb_pixel(i) <= (i_rgb_pixel((i + 1)*8 - 1 downto (i)*8)) when rising_edge(clk_pixel_x5) else rgb_pixel(i);
   --end generate COLOR_ASSIGNMENT;
@@ -211,14 +254,7 @@ begin
   -- rgb_pixel(g_index) <= (i_rgb_pixel(15 downto 8)) when rising_edge(clk_pixel_x5) else rgb_pixel(g_index);
   -- rgb_pixel(b_index) <= (i_rgb_pixel(7 downto 0)) when rising_edge(clk_pixel_x5) else rgb_pixel(b_index);
 
-  rgb_latch_process: process(clk_pixel_x5)
-  begin
-    if rising_edge(clk_pixel_x5) then
-      rgb_pixel(r_index) <= (i_rgb_pixel(23 downto 16));
-      rgb_pixel(g_index) <= (i_rgb_pixel(15 downto 8));
-      rgb_pixel(b_index) <= (i_rgb_pixel(7 downto 0));
-    end if;
-  end process;
+
   --r_pixel <= (i_rgb_pixel(23 downto 16)) when rising_edge(clk_pixel_x5) else r_pixel;
   --g_pixel <= (i_rgb_pixel(15 downto 8))  when rising_edge(clk_pixel_x5) else g_pixel;
   --b_pixel <= (i_rgb_pixel(7 downto 0))   when rising_edge(clk_pixel_x5) else b_pixel;

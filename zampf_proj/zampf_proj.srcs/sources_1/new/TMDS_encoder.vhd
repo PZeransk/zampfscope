@@ -83,11 +83,11 @@ constant kCtlTkn2 : std_logic_vector(9 downto 0) := "0101010100";
 constant kCtlTkn3 : std_logic_vector(9 downto 0) := "1010101011";
 
 signal pDataOut_1 : std_logic_vector(7 downto 0);
-signal q_m_1, q_m_xor_1, q_m_xnor_1, q_m_2: std_logic_vector(8 downto 0);
+signal q_m_1, q_m_xor_1, q_m_xnor_1, q_m_2: std_logic_vector(8 downto 0) := (others => '0') ;
 signal control_token_2, q_out_2: std_logic_vector(9 downto 0);
 signal n1d_1, n1q_m_2, n0q_m_2, n1q_m_1 : unsigned(3 downto 0); --range 0-8
 signal dc_bias_2, cnt_t_3, cnt_t_2 : signed(4 downto 0) := "00000"; --range -8 - +8 + sign
-signal pC0_1, pC1_1, pVde_1, pC0_2, pC1_2, pVde_2 : std_logic;
+signal pC0_1, pC1_1, pVde_1, pC0_2, pC1_2, pVde_2 : std_logic := '0';
 signal cond_not_balanced_2, cond_balanced_2 : std_logic;
 
 function sum_bits(u : std_logic_vector) return unsigned is

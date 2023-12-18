@@ -39,8 +39,8 @@ end entity;
 
 architecture Behavioral of serializer is
   signal data_index   : integer range 0 to BUS_LEN := 0;
-  signal inner_data   : std_logic;
-  signal data_latch   : std_logic_vector(9 downto 0);
+  signal inner_data   : std_logic := '0';
+  signal data_latch   : std_logic_vector(9 downto 0) := (others => '0') ;
 begin
 
   process (i_shift_clk, i_clk)
