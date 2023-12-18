@@ -49,27 +49,34 @@ begin
   process (i_clk, i_x, i_y)
   begin
   if(rising_edge(i_clk)) then
-
     if(i_y = to_integer(unsigned(i_meas_data_0)) + 112) then
-    r_sig <= "11111111";
-    g_sig <= "11111111";
-    b_sig <= (others => '0');
+      r_sig <= "11111111";
+      g_sig <= "11111111";
+      b_sig <= (others => '0');
     elsif(i_y = to_integer(unsigned(i_meas_data_1)) + 142) then
-    r_sig <= (others => '0');
-    g_sig <= "11111111";
-    b_sig <= (others => '0');
+      r_sig <= (others => '0');
+      g_sig <= "11111111";
+      b_sig <= (others => '0');
     elsif(i_y < 110)  then
-    r_sig <= "11111111";
-    g_sig <= (others => '0');
-    b_sig <= "11111111";
+      r_sig <= "11111111";
+      g_sig <= "10011111";
+      b_sig <= "11111111";
     elsif(i_y > 370)  then
-    r_sig <= "11111111";
-    g_sig <= (others => '0');
-    b_sig <= "11111111";    
+      r_sig <= "11111111";
+      g_sig <= "10011111";
+      b_sig <= "11111111";
+    elsif(i_x mod 64 = 0) then
+      r_sig <= "01111111";
+      g_sig <= "01111111";
+      b_sig <= "01111111";
+    elsif(i_y mod 48 = 0) then
+      r_sig <= "01111111";
+      g_sig <= "01111111";
+      b_sig <= "01111111";
     else
-    r_sig <= (others => '0');
-    g_sig <= (others => '0');
-    b_sig <= (others => '0');
+      r_sig <= (others => '0');
+      g_sig <= (others => '0');
+      b_sig <= (others => '0');
     end if;
 
   end if;
