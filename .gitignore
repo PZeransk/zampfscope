@@ -8,3 +8,5 @@
 *.jou
 *.str
 *.zip
+**/.vscode
+**/*.wcfg
