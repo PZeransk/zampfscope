@@ -1,5 +1,4 @@
 
-
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.numeric_std.all;
@@ -12,76 +11,142 @@ generic(
 port(
   clk_250MHZ         : in std_logic;
   i_reset            : in std_logic;
-  o_curr_RGB         : out std_logic_vector(23 downto 0);
-  o_tmds             : out std_logic_vector(7 downto 0);
-  o_video_ena        : out std_logic
+  i_miso_0           : in std_logic;
+  i_miso_1           : in std_logic;
+ -- i_enable_spi       : in std_logic;
+  i_trigger          : in std_logic;
+  o_spi_clk          : out std_logic; 
+  o_cs               : out std_logic; 
+
+  --o_curr_RGB         : out std_logic_vector(23 downto 0) :=(others => 'Z');
+  o_tmds             : out std_logic_vector(7 downto 0)
+ -- o_video_ena        : out std_logic
 );
 end HDMI_TOP;
 
 architecture behavioral of HDMI_TOP is
-  constant IMG_WIDTH        : integer   := 640;
-  constant IMG_HEIGHT       : integer   := 480;
+
+
+component clk_wiz_0
+port
+ (-- Clock in ports
+  -- Clock out ports
+  clk_out1          : out    std_logic;
+  clk_out2          : out    std_logic;
+  -- Status and control signals
+  resetn             : in     std_logic;
+  locked            : out    std_logic;
+  clk_in1           : in     std_logic
+ );
+end component;
+
+
+ -- HDMI signals
+  constant IMG_WIDTH        : integer range 0 to 640  := 640;
+  constant IMG_HEIGHT       : integer range 0 to 480  := 480;
 
   signal reset_n            : std_logic := '1';
-  signal curr_RGB           : std_logic_vector(23 downto 0);
-  signal tmds_all           : std_logic_vector(7 downto 0);
-  signal curr_x, curr_y     : integer;
-
+  signal curr_RGB           : std_logic_vector(23 downto 0) := (others => '0');
+  signal tmds_all           : std_logic_vector(7 downto 0) := (others => '0');
+  --signal curr_x             : integer range 0 to 640  := 640;
+  signal curr_x             : integer range 0 to 640  := 0;
+  signal curr_y             : integer range 0 to 480  := 480;
   signal blanking           : std_logic;
 
-  signal enable             : std_logic := '1';
+  --signal enable             : std_logic := '1';
   signal trigger            : std_logic := '0';
-  signal meas_data_0        : std_logic_vector(C_data_res -1 downto 0);
-  signal meas_data_1        : std_logic_vector(C_data_res -1 downto 0);
+  signal meas_data_0        : std_logic_vector(C_data_res -1 downto 0) := (others => '0');
+  signal meas_data_1        : std_logic_vector(C_data_res -1 downto 0) := (others => '0');
+  
 
-  --signal image_cnt 	: integer range 0 to C_image_legnth := 0;
+  signal locked             : std_logic;
+  signal clk_out1           : std_logic;
+  signal clk_100MHz         : std_logic;
+
+
+   --signal image_cnt 	: integer range 0 to C_image_legnth := 0;
 begin
 
-  reset_n <= not i_reset;
+--
+--PLL : entity work.clk_wiz_0_clk_wiz
+--port map(
+--
+--clk_out1 => clk2,
+--clk_out2 => clk_100MHz,
+--reset    => i_reset,
+--locked   => locked,
+--clk_in1  => clk_250MHZ
+--
+--  );
 
-  HDMI_if : entity work.HDMI_test
-  generic map (
-    img_width   => IMG_WIDTH,
-    img_height  => IMG_HEIGHT
+PLL : clk_wiz_0
+   port map ( 
+  -- Clock out ports  
+   clk_out1 => clk_out1,
+   clk_out2 => clk_100MHz,
+  -- Status and control signals                
+   resetn => reset_n,
+   locked => locked,
+   -- Clock in ports
+   clk_in1 => clk_250MHZ
+ );
+
+
+
+    adc_controller1 : entity work.adc_controller
+  generic map(
+    C_resolution    => C_data_res
   )
-  port map (
-    i_pxl_clk   => clk_250MHZ,
-    i_reset_n   => reset_n,
-    o_tmds_all  => tmds_all,
-    i_rgb_pixel => curr_RGB,
-    o_curr_x    => curr_x,
-    o_curr_y    => curr_y,
-    blanking    => blanking
-  );
-
-  image_generator : entity work.HDMI_image_gen
-  generic map (
-    IMAGE_WIDTH   => IMG_WIDTH,
-    IMAGE_HEIGHT  => IMG_HEIGHT,
-    C_data_res    => C_data_res
-    )
-  port map (
-    i_clk         => clk_250MHZ,  -- can be this clock, can be 25MHz clock... both will work i suppose?
-    i_x           => curr_x,
-    i_y           => curr_y,
-    i_meas_data_0 => meas_data_0,
-    i_meas_data_1 => meas_data_1,
-    o_rgb         => curr_RGB
-  );
-
-  adc_controller : entity work.adc_controller
   port map(
-    i_clk           => clk_250MHZ,
-    i_reset         => i_reset,
-    i_enable_spi    => enable,
-    i_trigger_n     => trigger,
+    i_clk           => clk_out1,
+    i_reset_n       => reset_n,
+    --i_enable_spi    => i_enable_spi,
+    i_trigger       => trigger,
     i_x_pixel       => curr_x,
+    i_miso_0        => i_miso_0,
+    i_miso_1        => i_miso_1,
+    o_spi_clk       => o_spi_clk,
+    o_cs            => o_cs,
     o_meas_data_0   => meas_data_0,
     o_meas_data_1   => meas_data_1
-
   );
+  
+  
 
+ HDMI_if : entity work.HDMI_test
+ generic map (
+   img_width   => IMG_WIDTH,
+   img_height  => IMG_HEIGHT
+ )
+ port map (
+   i_pxl_clk   => clk_out1,
+   i_reset_n   => reset_n,
+   o_tmds_all  => tmds_all,
+   i_rgb_pixel => curr_RGB,
+   o_curr_x    => curr_x,
+   o_curr_y    => curr_y,
+   blanking    => blanking
+ );
+
+ image_generator_HDMI : entity work.HDMI_image_gen
+ generic map (
+   IMAGE_WIDTH   => IMG_WIDTH,
+   IMAGE_HEIGHT  => IMG_HEIGHT,
+   C_data_res    => C_data_res
+   )
+ port map (
+   i_clk         => clk_out1,  -- can be this clock, can be 25MHz clock... both will work i suppose?
+   --i_x           => curr_x,
+   i_y           => curr_y,
+   i_meas_data_0 => meas_data_0,
+   i_meas_data_1 => meas_data_1,
+   o_rgb         => curr_RGB
+ );
+
+  trigger <= NOT i_trigger;
+  reset_n <= not i_reset;
   o_tmds <= tmds_all;
-  o_video_ena <= not blanking;
-  o_curr_RGB <= curr_RGB;
+  --o_clk  <= clk_250MHZ;
+ -- o_video_ena <= not blanking;
+ -- o_curr_RGB <= curr_RGB;
 end architecture;

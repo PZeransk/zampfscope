@@ -22,7 +22,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.numeric_std.all;
-use work.all;
+ 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
 --use IEEE.NUMERIC_STD.ALL;
@@ -65,12 +65,12 @@ type rgb_array      is array (0 to 2) of std_logic_vector(7 downto 0);
 type TMDS_data_out  is array (0 to 2) of std_logic_vector(9 downto 0);
 
 signal clk_pixel_x5 : std_logic;
-signal x_img        : integer range 0 to img_width; -- range(0, img_width) -- variables that shows which
-signal y_img        : integer range 0 to img_height; -- range(0,img_height) -- pixel of screen is printed
-signal x_last       : integer range 0 to img_width;
-signal y_last       : integer range 0 to img_height;
-signal x_total      : integer range 0 to frame_width;
-signal y_total      : integer range 0 to frame_height;
+signal x_img        : integer range 0 to img_width := 0; -- range(0, img_width) -- variables that shows which
+signal y_img        : integer range 0 to img_height := 0; -- range(0,img_height) -- pixel of screen is printed
+signal x_last       : integer range 0 to img_width := 0;
+signal y_last       : integer range 0 to img_height := 0;
+signal x_total      : integer range 0 to frame_width := 0;
+signal y_total      : integer range 0 to frame_height := 0;
 signal h_sync       : std_logic := '0';
 signal v_sync       : std_logic := '0';
 signal rgb_pixel    : rgb_array := (others => (others => '0') ) ;

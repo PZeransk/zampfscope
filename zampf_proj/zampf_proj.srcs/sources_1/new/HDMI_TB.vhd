@@ -41,12 +41,20 @@ architecture behavioral of HDMI_TB is
   signal clk_250MHz         : std_logic := '0';
   signal img_pixel_clock        : std_logic := '0';
   signal reset              : std_logic := '0';
-  signal curr_RGB           : std_logic_vector(23 downto 0);
+  signal curr_RGB           : std_logic_vector(23 downto 0) := (others => '0');
   signal tmds_all           : std_logic_vector(7 downto 0);
   --signal curr_x, curr_y     : integer;
 
   signal blanking           : std_logic;
   signal image_cnt 	: integer range 0 to C_image_legnth := 0;
+
+  signal r_miso_0 : std_logic := '0';
+  signal r_miso_1 : std_logic := '0';
+  signal spi_clk  : std_logic := '0';
+  signal cs 	  : std_logic := '0';
+
+  signal trigger : std_logic := '1';
+  signal enable_spi : std_logic := '1';
 begin
 
 -- DUT : entity work.HDMI_test
@@ -74,13 +82,34 @@ begin
 -- );
 
 DUT: entity work.HDMI_TOP
+generic map(
+  C_data_res => 8
+)
 port map(
   clk_250MHZ    =>  clk_250MHz,
   i_reset       =>  reset,
-  o_curr_RGB    =>  curr_RGB,
-  o_tmds        =>  tmds_all,
-  o_video_ena   =>  blanking
+  i_miso_0      => 	r_miso_0,
+  i_miso_1      => 	r_miso_1,
+  --i_enable_spi  =>  enable_spi,
+  i_trigger     =>  trigger,
+  o_spi_clk     => 	spi_clk,
+  o_cs          => 	cs,
+
+-- o_curr_RGB    =>  curr_RGB,
+  o_tmds        =>  tmds_all
+  --o_video_ena   =>  blanking
 );
+
+
+adc_sim0 : ENTITY work.adc_sim
+GENERIC MAP(C_data_length => 16)
+PORT MAP(
+	i_clk	=> spi_clk,
+	i_cs 	=> cs,
+	o_miso0	=> r_miso_0,
+	o_miso1	=> r_miso_1
+	);
+
 
 clk_sim: process
 begin
@@ -97,6 +126,9 @@ begin
   img_pixel_clock <= '1';
   wait for clock_period/2*10;
 end process;
+
+reset <= '1', '0' after 50 ns;
+trigger <= '0', '1' after 100 ns;
 
 file_save : process(img_pixel_clock, blanking)
 
@@ -142,7 +174,7 @@ begin
            -- l_o := new string'("");
             --write (response_file, string(l_o));
             --l_o'clear;
-            image_cnt <= image_cnt + 1;
+            --image_cnt <= image_cnt + 1;
 
             if(image_cnt mod x_size = 0 and image_cnt /= 0) then
                 write(response_file, (1 => LF));

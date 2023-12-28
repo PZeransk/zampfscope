@@ -44,7 +44,7 @@ Port (
 	i_clk			:	in 	std_logic;
 	i_cs 			:	in 	std_logic;
 	i_reset_n		:	in 	std_logic;
-	i_trigger_n 	:	in 	std_logic;
+	i_trigger 	:	in 	std_logic;
 
 	i_x_pixel 		: 	in  integer;
 	--i_h_sync		: 	in 	std_logic;
@@ -68,11 +68,11 @@ TYPE T_states		is (IDLE,
 --type T_IMAGE_BINARY	is array (0 to C_pixel_widht - 1) of std_logic_vector(C_pixel_height - 1 downto 0);
 
 signal measurment_status	: std_logic;
-signal r_spi_data0 			: std_logic_vector(C_resolution - 1 downto 0) := (others => '0');
-signal r_spi_data1 			: std_logic_vector(C_resolution - 1 downto 0) := (others => '0');
+signal r_spi_data0 			: std_logic_vector(C_data_length - 1 downto 0) := (others => '0');
+signal r_spi_data1 			: std_logic_vector(C_data_length - 1 downto 0) := (others => '0');
 signal pixel_height			: integer range 0 to C_pixel_height := 0;
 signal pixel_cnt			: integer range 0 to C_pixel_widht := 0;
-signal data_send_cnt		: integer range 0 to C_pixel_widht := 0;
+--signal data_send_cnt		: integer range 0 to C_pixel_widht := 0;
 --signal v_data_reg	: std_logic_vector(C_pixel_height - 1 downto 0) := (others => '0');
 signal MY_IMAGE_0		: T_IMAGE;
 signal MY_IMAGE_1		: T_IMAGE;
@@ -85,41 +85,45 @@ begin
 
 
 
-gen_image : process(i_clk, i_reset_n, i_cs, i_trigger_n) is
+gen_image : process(i_clk, i_reset_n, i_cs, i_trigger, image_state) is
 begin
 --this should generate integer vector for vga controller
-if(i_reset_n = '1') then
+-- was =1
+if(i_reset_n = '0') then
 
-pixel_cnt <= 0;
+--pixel_cnt <= 0;
+image_state <= IDLE;
 
-else 
+elsif(rising_edge(i_clk)) then
 case image_state is
 	
 	when IDLE =>
-		if(i_trigger_n = '1') then
-		pixel_cnt <= 0;
-		data_send_cnt <= 0;
+		if(i_trigger = '1') then
+		--pixel_cnt <= 0;
+		--data_send_cnt <= 0;
 		o_image_data0 <= (others => 'Z'); -- maybe as 0 later
 		o_adc_enable <= '1';
 		
 		else
 		image_state <= MEASURE;
 		end if;
+
+
 	when MEASURE =>
 
-		if(i_trigger_n = '0') then
+		if(i_trigger = '0') then
 		o_adc_enable <= '1';
-			if(falling_edge(i_cs)) then
+			if(i_cs = '0') then
 			
 					if (pixel_cnt < C_pixel_widht) then
 	
-					r_spi_data0 <= i_spi_data0(i_spi_data0'low + 11 downto i_spi_data0'low + 4);
-					r_spi_data1 <= i_spi_data1(i_spi_data1'low + 11 downto i_spi_data1'low + 4);
-					MY_IMAGE_0(pixel_cnt) <= r_spi_data0;
-					MY_IMAGE_1(pixel_cnt) <= r_spi_data1;
+					r_spi_data0 <= i_spi_data0;
+					r_spi_data1 <= i_spi_data1;
+					MY_IMAGE_0(pixel_cnt) <= r_spi_data0(11 downto 4);
+					MY_IMAGE_1(pixel_cnt) <= r_spi_data1(11 downto 4);
 					--pixel_height <= to_integer(unsigned(r_spi_data0));
 	
-					pixel_cnt <= pixel_cnt + 1;
+					--pixel_cnt <= pixel_cnt + 1;
 	
 					--v_data_reg(pixel_height) <= '1';
 					--MY_BIN_IMG(pixel_cnt) <= v_data_reg;
@@ -134,12 +138,12 @@ case image_state is
 		image_state <= IDLE;
 		end if;
 	when SEND =>
-		if(i_trigger_n = '0') then
-		if(rising_edge(i_clk)) then
+		if(i_trigger = '0') then
+
 			
 				o_image_data0 <= MY_IMAGE_0(i_x_pixel);
 				o_image_data1 <= MY_IMAGE_1(i_x_pixel);
-		end if;
+
 		else
 		image_state <= IDLE;
 		end if;
@@ -151,6 +155,16 @@ end if;
 
 
 end process; -- gen_image
+
+save_image : process(i_cs, i_reset_n) is
+begin
+    if(i_reset_n = '0') then
+        pixel_cnt <= 0;
+        --image_state <= IDLE;
+    elsif(rising_edge(i_cs)) then
+    	pixel_cnt <= pixel_cnt + 1;
+end if;
+end process; -- send_image
 
 -- this should send integers to vga controller after every Hsync pulse
 --send_image : process(i_clk, measurment_status) is

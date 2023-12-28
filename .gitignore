@@ -10,3 +10,7 @@
 *.zip
 **/.vscode
 **/*.wcfg
+path.txt
+*.xpr
+
+
