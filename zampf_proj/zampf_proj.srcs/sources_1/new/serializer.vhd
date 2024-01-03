@@ -31,8 +31,7 @@ entity serializer is
     i_clk       : in  std_logic;
     i_shift_clk : in  std_logic;
     i_data      : in  std_logic_vector(9 downto 0);
-    o_bit       : out std_logic;
-    o_n_bit     : out std_logic
+    o_bit       : out std_logic
   );
 end entity;
 
@@ -61,6 +60,5 @@ begin
 
   inner_data <= data_latch(data_index) when data_index < DATA_LEN else '0';
   o_bit <= inner_data;
-  o_n_bit <= not inner_data;
 
 end Behavioral;

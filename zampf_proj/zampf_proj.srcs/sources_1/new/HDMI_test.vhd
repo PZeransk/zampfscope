@@ -22,7 +22,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.numeric_std.all;
- 
+
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
 --use IEEE.NUMERIC_STD.ALL;
@@ -46,8 +46,8 @@ Generic (
 );
 Port (
   i_pxl_clk   : in std_logic;
-  i_reset_n   : in std_logic;
-  o_tmds_all  : out std_logic_vector(7 downto 0); -- (r, r, g, g, b, b, clk, clk)
+  i_reset_n   : in std_logic;                     -- (3, 2, 1,  0 )
+  o_tmds_all  : out std_logic_vector(3 downto 0); -- (r, g, b, clk)
 
   i_rgb_pixel : in std_logic_vector(23 downto 0);
   o_curr_x    : out integer range 0 to img_width;
@@ -130,13 +130,13 @@ begin
       i_clk       => clk_pixel_x5,
       i_shift_clk => i_pxl_clk,
       i_data      => tmds_signals(i),
-      o_bit       => o_tmds_all(7 - 2*i),
-      o_n_bit     => o_tmds_all(6 - 2*i)
+      o_bit       => o_tmds_all(i + 1)
+      --o_n_bit     => o_tmds_all(6 - 2*i)
     );
   end generate TMDS_rgb_encoders;
 
-  o_tmds_all(1) <= clk_pixel_x5;
-  o_tmds_all(0) <= not clk_pixel_x5;
+  o_tmds_all(0) <= clk_pixel_x5;
+  --o_tmds_all(0) <= not clk_pixel_x5;
 
   -- process(clk_pixel_x5, i_pxl_clk, i_reset_n)
   --   variable next_pxl_signal_state : integer range 0 to 3 := 3;
