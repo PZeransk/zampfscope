@@ -12,5 +12,5 @@
 **/*.wcfg
 path.txt
 *.xpr
-
+**/zampf_proj,xpr
 
