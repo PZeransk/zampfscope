@@ -113,17 +113,58 @@ PLL : clk_wiz_0
     o_meas_data_1   => meas_data_1
   );
 
-  OBUFDS_COLOR: for i in 0 to 3 generate
-    OBUFDS_COLOR : OBUFDS
+-- OBUFDS_COLOR: for i in 0 to 3 generate
+--   OBUFDS_COLOR : OBUFDS
+--   generic map (
+--     IOSTANDARD => "TMDS_33", -- Specify the output I/O standard
+--     SLEW => "FAST")          -- Specify the output slew rate
+--   port map (
+--     O => o_tmds(2*i),     -- Diff_p output (connect directly to top-level port)
+--     OB => o_tmds(2*i + 1),   -- Diff_n output (connect directly to top-level port)
+--     I => tmds_all(i)      -- Buffer input
+--   );
+-- end generate OBUFDS_COLOR;
+
+
+    OBUFDS_R : OBUFDS
     generic map (
       IOSTANDARD => "TMDS_33", -- Specify the output I/O standard
       SLEW => "FAST")          -- Specify the output slew rate
     port map (
-      O => o_tmds(2*i),     -- Diff_p output (connect directly to top-level port)
-      OB => o_tmds(2*i + 1),   -- Diff_n output (connect directly to top-level port)
-      I => tmds_all(i)      -- Buffer input
+      O => o_tmds(7),     -- Diff_p output (connect directly to top-level port)
+      OB => o_tmds(6),   -- Diff_n output (connect directly to top-level port)
+      I => tmds_all(3)      -- Buffer input
     );
-  end generate OBUFDS_COLOR;
+        OBUFDS_G : OBUFDS
+    generic map (
+      IOSTANDARD => "TMDS_33", -- Specify the output I/O standard
+      SLEW => "FAST")          -- Specify the output slew rate
+    port map (
+      O => o_tmds(5),     -- Diff_p output (connect directly to top-level port)
+      OB => o_tmds(4),   -- Diff_n output (connect directly to top-level port)
+      I => tmds_all(2)      -- Buffer input
+    );
+
+    OBUFDS_B : OBUFDS
+    generic map (
+      IOSTANDARD => "TMDS_33", -- Specify the output I/O standard
+      SLEW => "FAST")          -- Specify the output slew rate
+    port map (
+      O => o_tmds(3),     -- Diff_p output (connect directly to top-level port)
+      OB => o_tmds(2),   -- Diff_n output (connect directly to top-level port)
+      I => tmds_all(1)      -- Buffer input
+    );
+
+    OBUFDS_CLK : OBUFDS
+    generic map (
+      IOSTANDARD => "TMDS_33", -- Specify the output I/O standard
+      SLEW => "FAST")          -- Specify the output slew rate
+    port map (
+      O => o_tmds(1),     -- Diff_p output (connect directly to top-level port)
+      OB => o_tmds(0),   -- Diff_n output (connect directly to top-level port)
+      I => tmds_all(0)      -- Buffer input
+    );
+
 
 
  HDMI_if : entity work.HDMI_test
