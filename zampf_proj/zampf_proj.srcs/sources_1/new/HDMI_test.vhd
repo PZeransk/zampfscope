@@ -42,7 +42,9 @@ Generic (
   hsync_start     : integer := 16;
   hsync_size      : integer := 96;
   vsync_start     : integer := 10;
-  vsync_size      : integer := 2
+  vsync_size      : integer := 2;
+  hpolarity       : std_logic := '0';
+  vpolarity       : std_logic := '0'  
 );
 Port (
   i_pxl_clk   : in std_logic;
@@ -67,8 +69,6 @@ type TMDS_data_out  is array (0 to 2) of std_logic_vector(9 downto 0);
 signal clk_pixel_x5 : std_logic;
 signal x_img        : integer range 0 to img_width := 0; -- range(0, img_width) -- variables that shows which
 signal y_img        : integer range 0 to img_height := 0; -- range(0,img_height) -- pixel of screen is printed
-signal x_last       : integer range 0 to img_width := 0;
-signal y_last       : integer range 0 to img_height := 0;
 signal x_total      : integer range 0 to frame_width := 0;
 signal y_total      : integer range 0 to frame_height := 0;
 signal h_sync       : std_logic := '0';
@@ -204,15 +204,15 @@ begin
       video_enable <= '0';
     elsif (rising_edge(clk_pixel_x5)) then
       if (x_total >= img_width + hsync_start and x_total < img_width + hsync_start + hsync_size) then
-        h_sync <= '1';
+        h_sync <= hpolarity;
       else
-        h_sync <= '0';
+        h_sync <= not hpolarity;
       end if;
 
       if (y_total >= img_height + vsync_start and y_total < img_height + vsync_start + vsync_size) then
-        v_sync <= '1';
+        v_sync <= vpolarity;
       else
-        v_sync <= '0';
+        v_sync <= not vpolarity;
       end if;
 
       if (x_total < img_width) and (y_total < img_height) then

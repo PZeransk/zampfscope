@@ -161,7 +161,7 @@ begin
     writeline(response_file, l_o);
     end if;
 
-    if(rising_edge(img_pixel_clock) AND blanking = '1') then
+    if(rising_edge(img_pixel_clock)) then
     	if(image_cnt <= C_image_legnth) then
             write (l_o, to_integer(unsigned(curr_RGB(23 downto 16))));
             write (l_o, string'(" "));
@@ -174,7 +174,7 @@ begin
            -- l_o := new string'("");
             --write (response_file, string(l_o));
             --l_o'clear;
-            --image_cnt <= image_cnt + 1;
+            image_cnt <= image_cnt + 1;
 
             if(image_cnt mod x_size = 0 and image_cnt /= 0) then
                 write(response_file, (1 => LF));
