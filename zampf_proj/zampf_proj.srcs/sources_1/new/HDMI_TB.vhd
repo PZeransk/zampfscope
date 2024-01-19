@@ -35,7 +35,7 @@ end HDMI_TB;
 architecture behavioral of HDMI_TB is
   constant IMG_WIDTH        : integer   := 640;
   constant IMG_HEIGHT       : integer   := 480;
-  constant clock_period     : time      := 4 ns;
+  constant clock_period     : time      := 8 ns;
 
 
   signal clk_250MHz         : std_logic := '0';
@@ -86,7 +86,7 @@ generic map(
   C_data_res => 8
 )
 port map(
-  clk_250MHZ    =>  clk_250MHz,
+  clk_125MHz    =>  clk_250MHz,
   i_reset       =>  reset,
   i_miso_0      => 	r_miso_0,
   i_miso_1      => 	r_miso_1,

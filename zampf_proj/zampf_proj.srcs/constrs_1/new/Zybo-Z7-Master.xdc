@@ -5,7 +5,7 @@
 ## - rename the used ports (in each line, after get_ports) according to the top level signal names in the project
 
 ##Clock signal
-set_property -dict {PACKAGE_PIN K17 IOSTANDARD LVCMOS33} [get_ports clk_250MHZ]
+set_property -dict {PACKAGE_PIN K17 IOSTANDARD LVCMOS33} [get_ports clk_125MHz]
 #create_clock -period 8 -name clk_250MHZ_clk -waveform {0 4} [get_ports clk_250MHZ]
 #create_clock –period 8 –name clk_250MHZ –waveform {0 4} [get_ports clk_250MHZ];
 

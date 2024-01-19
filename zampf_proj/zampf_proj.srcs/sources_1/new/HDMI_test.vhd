@@ -35,6 +35,7 @@ use IEEE.numeric_std.all;
 -- HARD CODED FOR 640x480 !! who would need more here?
 entity HDMI_test is
 Generic (
+  magic_str       : string := "HD1080P";
   frame_width     : integer := 800; -- it all starts like
   frame_height    : integer := 525; -- in vga controller
   img_width       : integer := 640;
@@ -44,10 +45,11 @@ Generic (
   vsync_start     : integer := 10;
   vsync_size      : integer := 2;
   hpolarity       : std_logic := '0';
-  vpolarity       : std_logic := '0'  
+  vpolarity       : std_logic := '0'
 );
 Port (
-  i_pxl_clk   : in std_logic;
+  i_clk_serializer   : in std_logic;
+  i_pixel_clk : std_logic;
   i_reset_n   : in std_logic;                     -- (3, 2, 1,  0 )
   o_tmds_all  : out std_logic_vector(3 downto 0); -- (r, g, b, clk)
 
@@ -66,7 +68,6 @@ constant b_index : integer := 0;
 type rgb_array      is array (0 to 2) of std_logic_vector(7 downto 0);
 type TMDS_data_out  is array (0 to 2) of std_logic_vector(9 downto 0);
 
-signal clk_pixel_x5 : std_logic;
 signal x_img        : integer range 0 to img_width := 0; -- range(0, img_width) -- variables that shows which
 signal y_img        : integer range 0 to img_height := 0; -- range(0,img_height) -- pixel of screen is printed
 signal x_total      : integer range 0 to frame_width := 0;
@@ -84,22 +85,22 @@ signal video_enable : std_logic := '0';
 --signal proceed_image: std_logic;
 
 begin
-  clk_div_internal : ENTITY work.clock_divider
-  generic map (
-    C_cnt_div => 5
-  )
-  port map (
-    i_reset_n => i_reset_n,
-    i_clk => i_pxl_clk,
-    o_clk => clk_pixel_x5
-  );
+--  clk_div_internal : ENTITY work.clock_divider
+--  generic map (
+--    C_cnt_div => 5
+--  )
+--  port map (
+--    i_reset_n => i_reset_n,
+--    i_clk => i_clk_serializer,
+--    o_clk => i_pixel_clk
+--  );
 
   TMDS_rgb_encoders: for i in 0 to 2 generate
 
     HV_SYNC : if (i = b_index) generate
       TMDS: entity work.TMDS_Encoder
         port map (
-          PixelClk    => clk_pixel_x5,
+          PixelClk    => i_pixel_clk,
           SerialClk   => '0',
           aRst        => '0',
           pDataOutRaw => tmds_signals(i),
@@ -113,7 +114,7 @@ begin
     COLOR : if (i /= b_index) generate
       TMDS: entity work.TMDS_Encoder
         port map (
-          PixelClk    => clk_pixel_x5,
+          PixelClk    => i_pixel_clk,
           SerialClk   => '0',
           aRst        => '0',
           pDataOutRaw => tmds_signals(i),
@@ -127,44 +128,44 @@ begin
     -- serializer generate
     RGB_serializer : entity work.serializer
     port map (
-      i_clk       => clk_pixel_x5,
-      i_shift_clk => i_pxl_clk,
+      i_clk       => i_pixel_clk,
+      i_shift_clk => i_clk_serializer,
       i_data      => tmds_signals(i),
       o_bit       => o_tmds_all(i + 1)
       --o_n_bit     => o_tmds_all(6 - 2*i)
     );
   end generate TMDS_rgb_encoders;
 
-  o_tmds_all(0) <= clk_pixel_x5;
-  --o_tmds_all(0) <= not clk_pixel_x5;
+  o_tmds_all(0) <= i_pixel_clk;
+  --o_tmds_all(0) <= not i_pixel_clk;
 
-  -- process(clk_pixel_x5, i_pxl_clk, i_reset_n)
+  -- process(i_pixel_clk, i_clk_serializer, i_reset_n)
   --   variable next_pxl_signal_state : integer range 0 to 3 := 3;
   -- begin
   --   if(i_reset_n ='0') then
   --       next_pxl_signal_state  := 3;
   --       proceed_image <= '0';
   --   else
-  --     if(rising_edge(clk_pixel_x5)) then
+  --     if(rising_edge(i_pixel_clk)) then
   --       next_pxl_signal_state  := 0;
-  --     elsif(rising_edge(i_pxl_clk) and next_pxl_signal_state  = 0) then
+  --     elsif(rising_edge(i_clk_serializer) and next_pxl_signal_state  = 0) then
   --       next_pxl_signal_state  := 1;
   --       proceed_image <= '1';
-  --     elsif(rising_edge(i_pxl_clk) and next_pxl_signal_state  = 1) then
+  --     elsif(rising_edge(i_clk_serializer) and next_pxl_signal_state  = 1) then
   --       next_pxl_signal_state  := 3;
   --       proceed_image <= '0';
   --     end if;
   --   end if;
   -- end process;
 
-  process(clk_pixel_x5, i_reset_n)
+  process(i_pixel_clk, i_reset_n)
   begin
     if (i_reset_n = '0') then
       x_img <= 0;
       y_img <= 0;
       x_total <= 0;
       y_total <= 0;
-    elsif(rising_edge(clk_pixel_x5)) then
+    elsif(rising_edge(i_pixel_clk)) then
       --(y_total, x_total) <= (0, x_total+1) when y_total = frame_width else (y_total + 1, x_total);
       if(x_total = frame_width - 1) then
         x_total <= 0;
@@ -196,13 +197,13 @@ begin
 
 
 
-  hv_sync_vena : process(clk_pixel_x5, i_reset_n)
+  hv_sync_vena : process(i_pixel_clk, i_reset_n)
   begin
     if (i_reset_n = '0') then
       h_sync <= '0';
       v_sync <= '0';
       video_enable <= '0';
-    elsif (rising_edge(clk_pixel_x5)) then
+    elsif (rising_edge(i_pixel_clk)) then
       if (x_total >= img_width + hsync_start and x_total < img_width + hsync_start + hsync_size) then
         h_sync <= hpolarity;
       else
@@ -227,9 +228,9 @@ begin
     end if;
   end process;
 
-  rgb_latch_process: process(clk_pixel_x5)
+  rgb_latch_process: process(i_pixel_clk)
   begin
-    if rising_edge(clk_pixel_x5) then
+    if rising_edge(i_pixel_clk) then
       rgb_pixel(r_index) <= (i_rgb_pixel(23 downto 16));
       rgb_pixel(g_index) <= (i_rgb_pixel(15 downto 8));
       rgb_pixel(b_index) <= (i_rgb_pixel(7 downto 0));
@@ -244,20 +245,20 @@ begin
   --! WARNING: Asynchronous assigning pixel with clock will generate one clock tic delay!!
 
   --COLOR_ASSIGNMENT: for i in 0 to 2 generate
-  --  rgb_pixel(i) <= (i_rgb_pixel((i + 1)*8 - 1 downto (i)*8)) when rising_edge(clk_pixel_x5) else rgb_pixel(i);
+  --  rgb_pixel(i) <= (i_rgb_pixel((i + 1)*8 - 1 downto (i)*8)) when rising_edge(i_pixel_clk) else rgb_pixel(i);
   --end generate COLOR_ASSIGNMENT;
 
   --should generate something like:
     --should generate something like:
 
-  -- rgb_pixel(r_index) <= (i_rgb_pixel(23 downto 16)) when rising_edge(clk_pixel_x5) else rgb_pixel(r_index);
-  -- rgb_pixel(g_index) <= (i_rgb_pixel(15 downto 8)) when rising_edge(clk_pixel_x5) else rgb_pixel(g_index);
-  -- rgb_pixel(b_index) <= (i_rgb_pixel(7 downto 0)) when rising_edge(clk_pixel_x5) else rgb_pixel(b_index);
+  -- rgb_pixel(r_index) <= (i_rgb_pixel(23 downto 16)) when rising_edge(i_pixel_clk) else rgb_pixel(r_index);
+  -- rgb_pixel(g_index) <= (i_rgb_pixel(15 downto 8)) when rising_edge(i_pixel_clk) else rgb_pixel(g_index);
+  -- rgb_pixel(b_index) <= (i_rgb_pixel(7 downto 0)) when rising_edge(i_pixel_clk) else rgb_pixel(b_index);
 
 
-  --r_pixel <= (i_rgb_pixel(23 downto 16)) when rising_edge(clk_pixel_x5) else r_pixel;
-  --g_pixel <= (i_rgb_pixel(15 downto 8))  when rising_edge(clk_pixel_x5) else g_pixel;
-  --b_pixel <= (i_rgb_pixel(7 downto 0))   when rising_edge(clk_pixel_x5) else b_pixel;
+  --r_pixel <= (i_rgb_pixel(23 downto 16)) when rising_edge(i_pixel_clk) else r_pixel;
+  --g_pixel <= (i_rgb_pixel(15 downto 8))  when rising_edge(i_pixel_clk) else g_pixel;
+  --b_pixel <= (i_rgb_pixel(7 downto 0))   when rising_edge(i_pixel_clk) else b_pixel;
   --rgb_pixel(r_index) <= r_pixel;
   --rgb_pixel(g_index) <= g_pixel;
   --rgb_pixel(b_index) <= b_pixel;
