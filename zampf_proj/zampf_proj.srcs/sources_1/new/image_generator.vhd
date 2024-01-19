@@ -100,6 +100,7 @@ case image_state is
 		--pixel_cnt <= 0;
 		--data_send_cnt <= 0;
 		o_image_data0 <= (others => 'Z'); -- maybe as 0 later
+		o_image_data1 <= (others => 'Z'); -- maybe as 0 later
 		o_adc_enable <= '1';
 		
 		else

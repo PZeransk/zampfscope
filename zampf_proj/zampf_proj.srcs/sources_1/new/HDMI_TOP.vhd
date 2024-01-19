@@ -86,7 +86,7 @@ end component;
     end if;
   end function;
 
-  constant hdmi_configuration_strstr : string := "HD720P";  -- possibilities: "HD1080P", "HD720P", "SVGA", "VGA"
+  constant hdmi_configuration_strstr : string := "VGA";  -- possibilities: "HD1080P", "HD720P", "SVGA", "VGA"
   constant TESTING_OWN_CLK_FOR_HDMI : std_logic := '1';
   constant current_hdmi_conf : HDMI_configuration_type := setCurrentHDMIConf(hdmi_configuration_strstr);
    --signal image_cnt 	: integer range 0 to C_image_legnth := 0;
