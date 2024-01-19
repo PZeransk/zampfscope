@@ -6,7 +6,7 @@
 
 ##Clock signal
 set_property -dict {PACKAGE_PIN K17 IOSTANDARD LVCMOS33} [get_ports clk_125MHz]
-#create_clock -period 8 -name clk_250MHZ_clk -waveform {0 4} [get_ports clk_250MHZ]
+#create_clock -period 8 -name clk_125MHz_clk -waveform {0 4} [get_ports clk_125MHz]
 #create_clock –period 8 –name clk_250MHZ –waveform {0 4} [get_ports clk_250MHZ];
 
 #create_generated_clock -name test_clk1 -source [get_ports clk_250MHZ] -divide_by 2 [get_pins {adc_controller1/o_clk_OBUF_BUFG/I}]
@@ -62,14 +62,14 @@ set_property -dict {PACKAGE_PIN P16 IOSTANDARD LVCMOS33} [get_ports i_reset]
 #set_property -dict { PACKAGE_PIN E18   IOSTANDARD LVCMOS33 } [get_ports { o_video_ena }]; #IO_L5P_T0_AD9P_35 Sch=hdmi_tx_hpd
 #set_property -dict { PACKAGE_PIN G17   IOSTANDARD LVCMOS33 } [get_ports { hdmi_tx_scl }]; #IO_L16P_T2_35 Sch=hdmi_tx_scl
 #set_property -dict { PACKAGE_PIN G18   IOSTANDARD LVCMOS33 } [get_ports { hdmi_tx_sda }]; #IO_L16N_T2_35 Sch=hdmi_tx_sda
-set_property -dict {PACKAGE_PIN H17 IOSTANDARD TMDS_33} [get_ports {o_tmds[0]}]
-set_property -dict {PACKAGE_PIN H16 IOSTANDARD TMDS_33} [get_ports {o_tmds[1]}]
-set_property -dict {PACKAGE_PIN D20 IOSTANDARD TMDS_33} [get_ports {o_tmds[2]}]
-set_property -dict {PACKAGE_PIN D19 IOSTANDARD TMDS_33} [get_ports {o_tmds[3]}]
-set_property -dict {PACKAGE_PIN B20 IOSTANDARD TMDS_33} [get_ports {o_tmds[4]}]
-set_property -dict {PACKAGE_PIN C20 IOSTANDARD TMDS_33} [get_ports {o_tmds[5]}]
-set_property -dict {PACKAGE_PIN A20 IOSTANDARD TMDS_33} [get_ports {o_tmds[6]}]
-set_property -dict {PACKAGE_PIN B19 IOSTANDARD TMDS_33} [get_ports {o_tmds[7]}]
+set_property -dict {PACKAGE_PIN H17 IOSTANDARD TMDS_33} [get_ports {o_tmds_clk_n}]
+set_property -dict {PACKAGE_PIN H16 IOSTANDARD TMDS_33} [get_ports {o_tmds_clk_p}]
+set_property -dict {PACKAGE_PIN D20 IOSTANDARD TMDS_33} [get_ports {o_tmds_data_n[0]}]
+set_property -dict {PACKAGE_PIN D19 IOSTANDARD TMDS_33} [get_ports {o_tmds_data_p[0]}]
+set_property -dict {PACKAGE_PIN B20 IOSTANDARD TMDS_33} [get_ports {o_tmds_data_n[1]}]
+set_property -dict {PACKAGE_PIN C20 IOSTANDARD TMDS_33} [get_ports {o_tmds_data_p[1]}]
+set_property -dict {PACKAGE_PIN A20 IOSTANDARD TMDS_33} [get_ports {o_tmds_data_n[2]}]
+set_property -dict {PACKAGE_PIN B19 IOSTANDARD TMDS_33} [get_ports {o_tmds_data_p[2]}]
 
 
 ##HDMI TX CEC

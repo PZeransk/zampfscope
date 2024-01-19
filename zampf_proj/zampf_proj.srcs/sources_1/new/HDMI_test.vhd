@@ -49,14 +49,16 @@ Generic (
 );
 Port (
   i_clk_serializer   : in std_logic;
-  i_pixel_clk : std_logic;
+  i_pixel_clk : in std_logic;
   i_reset_n   : in std_logic;                     -- (3, 2, 1,  0 )
   o_tmds_all  : out std_logic_vector(3 downto 0); -- (r, g, b, clk)
 
   i_rgb_pixel : in std_logic_vector(23 downto 0);
   o_curr_x    : out integer range 0 to img_width;
   o_curr_y    : out integer range 0 to img_height;
-  blanking    : out std_logic
+  blanking    : out std_logic;
+  o_v_sync    : out std_logic;
+  o_h_sync    : out std_logic
   );
 end HDMI_test;
 
@@ -95,46 +97,46 @@ begin
 --    o_clk => i_pixel_clk
 --  );
 
-  TMDS_rgb_encoders: for i in 0 to 2 generate
-
-    HV_SYNC : if (i = b_index) generate
-      TMDS: entity work.TMDS_Encoder
-        port map (
-          PixelClk    => i_pixel_clk,
-          SerialClk   => '0',
-          aRst        => '0',
-          pDataOutRaw => tmds_signals(i),
-          pDataOut    => rgb_pixel(i),
-          pC0         => h_sync,
-          pC1         => v_sync,
-          pVde        => video_enable
-        );
-    end generate HV_SYNC;
-
-    COLOR : if (i /= b_index) generate
-      TMDS: entity work.TMDS_Encoder
-        port map (
-          PixelClk    => i_pixel_clk,
-          SerialClk   => '0',
-          aRst        => '0',
-          pDataOutRaw => tmds_signals(i),
-          pDataOut    => rgb_pixel(i),
-          pC0         => '0',
-          pC1         => '0',
-          pVde        => video_enable
-        );
-    end generate COLOR;
-
-    -- serializer generate
-    RGB_serializer : entity work.serializer
-    port map (
-      i_clk       => i_pixel_clk,
-      i_shift_clk => i_clk_serializer,
-      i_data      => tmds_signals(i),
-      o_bit       => o_tmds_all(i + 1)
-      --o_n_bit     => o_tmds_all(6 - 2*i)
-    );
-  end generate TMDS_rgb_encoders;
+--  TMDS_rgb_encoders: for i in 0 to 2 generate
+--
+--    HV_SYNC : if (i = b_index) generate
+--      TMDS: entity work.TMDS_Encoder
+--        port map (
+--          PixelClk    => i_pixel_clk,
+--          SerialClk   => '0',
+--          aRst        => '0',
+--          pDataOutRaw => tmds_signals(i),
+--          pDataOut    => rgb_pixel(i),
+--          pC0         => h_sync,
+--          pC1         => v_sync,
+--          pVde        => video_enable
+--        );
+--    end generate HV_SYNC;
+--
+--    COLOR : if (i /= b_index) generate
+--      TMDS: entity work.TMDS_Encoder
+--        port map (
+--          PixelClk    => i_pixel_clk,
+--          SerialClk   => '0',
+--          aRst        => '0',
+--          pDataOutRaw => tmds_signals(i),
+--          pDataOut    => rgb_pixel(i),
+--          pC0         => '0',
+--          pC1         => '0',
+--          pVde        => video_enable
+--        );
+--    end generate COLOR;
+--
+--    -- serializer generate
+--    RGB_serializer : entity work.serializer
+--    port map (
+--      i_clk       => i_pixel_clk,
+--      i_shift_clk => i_clk_serializer,
+--      i_data      => tmds_signals(i),
+--      o_bit       => o_tmds_all(i + 1)
+--      --o_n_bit     => o_tmds_all(6 - 2*i)
+--    );
+--  end generate TMDS_rgb_encoders;
 
   o_tmds_all(0) <= i_pixel_clk;
   --o_tmds_all(0) <= not i_pixel_clk;
@@ -240,8 +242,9 @@ begin
   -- signal assignment:
   o_curr_x <= x_img;
   o_curr_y <= y_img;
-  blanking <= not video_enable;
-
+  blanking <= video_enable;
+  o_v_sync <= v_sync;
+  o_h_sync <= h_sync;
   --! WARNING: Asynchronous assigning pixel with clock will generate one clock tic delay!!
 
   --COLOR_ASSIGNMENT: for i in 0 to 2 generate

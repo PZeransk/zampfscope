@@ -35,10 +35,8 @@ entity image_generator is
 Generic(
 	C_data_length	:	integer := 16;
 	C_resolution	:	integer	:= 8;
-	C_pixel_widht	: 	integer := 640;
-	C_pixel_height	:	integer := 256;
-	C_image_h		:	integer	:= 640;
-	C_image_v		:	integer := 640
+	C_pixel_widht	: 	integer := 640
+	--C_pixel_height	:	integer := 256
 	);
 Port ( 
 	i_clk			:	in 	std_logic;
@@ -70,7 +68,7 @@ TYPE T_states		is (IDLE,
 signal measurment_status	: std_logic;
 signal r_spi_data0 			: std_logic_vector(C_data_length - 1 downto 0) := (others => '0');
 signal r_spi_data1 			: std_logic_vector(C_data_length - 1 downto 0) := (others => '0');
-signal pixel_height			: integer range 0 to C_pixel_height := 0;
+--signal pixel_height			: integer range 0 to C_pixel_height := 0;
 signal pixel_cnt			: integer range 0 to C_pixel_widht := 0;
 --signal data_send_cnt		: integer range 0 to C_pixel_widht := 0;
 --signal v_data_reg	: std_logic_vector(C_pixel_height - 1 downto 0) := (others => '0');

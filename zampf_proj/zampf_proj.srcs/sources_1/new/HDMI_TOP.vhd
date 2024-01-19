@@ -22,7 +22,12 @@ port(
 
   --o_curr_RGB         : out std_logic_vector(23 downto 0) :=(others => 'Z');
                                                         -- (7, 6 , 5, 4 , 3, 2 ,  1 ,  0)
-  o_tmds             : out std_logic_vector(7 downto 0) -- (r, rn, g, gn, b, bn, clk, clkn)
+  --o_tmds             : out std_logic_vector(7 downto 0) -- (r, rn, g, gn, b, bn, clk, clkn)
+  o_tmds_clk_p       : out std_logic;
+  o_tmds_clk_n       : out std_logic;
+  o_tmds_data_p      : out std_logic_vector(2 downto 0);
+  o_tmds_data_n      : out std_logic_vector(2 downto 0)
+
  -- o_video_ena        : out std_logic
 );
 end HDMI_TOP;
@@ -57,6 +62,8 @@ end component;
   signal meas_data_0        : std_logic_vector(C_data_res -1 downto 0) := (others => '0');
   signal meas_data_1        : std_logic_vector(C_data_res -1 downto 0) := (others => '0');
 
+  signal v_sync             : std_logic;
+  signal h_sync             : std_logic;
 
   signal locked             : std_logic;
   signal clk_out1           : std_logic;
@@ -79,23 +86,13 @@ end component;
     end if;
   end function;
 
-  constant hdmi_configuration_strstr : string := "VGA";  -- possibilities: "HD1080P", "HD720P", "SVGA", "VGA"
+  constant hdmi_configuration_strstr : string := "HD720P";  -- possibilities: "HD1080P", "HD720P", "SVGA", "VGA"
   constant TESTING_OWN_CLK_FOR_HDMI : std_logic := '1';
   constant current_hdmi_conf : HDMI_configuration_type := setCurrentHDMIConf(hdmi_configuration_strstr);
    --signal image_cnt 	: integer range 0 to C_image_legnth := 0;
 begin
 
---
---PLL : entity work.clk_wiz_0_clk_wiz
---port map(
---
---clk_out1 => clk2,
---clk_out2 => clk_100MHz,
---reset    => i_reset,
---locked   => locked,
---clk_in1  => clk_125MHz
---
---  );
+
 
 PLL : clk_wiz_0
    port map (
@@ -122,7 +119,10 @@ PLL_HDMI_SELF: entity work.clk_mgr_hdmi
 
 adc_controller1 : entity work.adc_controller
   generic map(
-    C_resolution    => C_data_res
+    C_resolution    => C_data_res,
+    C_clk_ratio     => 100,
+    C_data_length   => 16,
+    C_pixel_width   => current_hdmi_conf.frame_width
   )
   port map(
     i_clk           => clk_out1,
@@ -138,57 +138,7 @@ adc_controller1 : entity work.adc_controller
     o_meas_data_1   => meas_data_1
   );
 
--- OBUFDS_COLOR: for i in 0 to 3 generate
---   OBUFDS_COLOR : OBUFDS
---   generic map (
---     IOSTANDARD => "TMDS_33", -- Specify the output I/O standard
---     SLEW => "FAST")          -- Specify the output slew rate
---   port map (
---     O => o_tmds(2*i),     -- Diff_p output (connect directly to top-level port)
---     OB => o_tmds(2*i + 1),   -- Diff_n output (connect directly to top-level port)
---     I => tmds_all(i)      -- Buffer input
---   );
--- end generate OBUFDS_COLOR;
 
-
-    OBUFDS_R : OBUFDS
-    generic map (
-      IOSTANDARD => "TMDS_33", -- Specify the output I/O standard
-      SLEW => "SLOW")          -- Specify the output slew rate
-    port map (
-      O => o_tmds(7),     -- Diff_p output (connect directly to top-level port)
-      OB => o_tmds(6),   -- Diff_n output (connect directly to top-level port)
-      I => tmds_all(3)      -- Buffer input
-    );
-    OBUFDS_G : OBUFDS
-    generic map (
-      IOSTANDARD => "TMDS_33", -- Specify the output I/O standard
-      SLEW => "SLOW")          -- Specify the output slew rate
-    port map (
-      O => o_tmds(5),     -- Diff_p output (connect directly to top-level port)
-      OB => o_tmds(4),   -- Diff_n output (connect directly to top-level port)
-      I => tmds_all(2)      -- Buffer input
-    );
-
-    OBUFDS_B : OBUFDS
-    generic map (
-      IOSTANDARD => "TMDS_33", -- Specify the output I/O standard
-      SLEW => "SLOW")          -- Specify the output slew rate
-    port map (
-      O => o_tmds(3),     -- Diff_p output (connect directly to top-level port)
-      OB => o_tmds(2),   -- Diff_n output (connect directly to top-level port)
-      I => tmds_all(1)      -- Buffer input
-    );
-
-    OBUFDS_CLK : OBUFDS
-    generic map (
-      IOSTANDARD => "TMDS_33", -- Specify the output I/O standard
-      SLEW => "SLOW")          -- Specify the output slew rate
-    port map (
-      O => o_tmds(1),     -- Diff_p output (connect directly to top-level port)
-      OB => o_tmds(0),   -- Diff_n output (connect directly to top-level port)
-      I => tmds_all(0)      -- Buffer input
-    );
 
 
 HDMI_OWN_TIMINGS: if TESTING_OWN_CLK_FOR_HDMI = '1' generate
@@ -214,9 +164,27 @@ port map (
   i_rgb_pixel => curr_RGB,
   o_curr_x    => curr_x,
   o_curr_y    => curr_y,
-  blanking    => blanking
+  blanking    => blanking,
+  o_v_sync    => v_sync,
+  o_h_sync    => h_sync
+);
+
+
+RGB2DVI : entity work.rgb2dvi_0
+port map (
+    TMDS_Clk_p   => o_tmds_clk_p, 
+    TMDS_Clk_n   => o_tmds_clk_n, 
+    TMDS_Data_p  => o_tmds_data_p,
+    TMDS_Data_n  => o_tmds_data_n,
+    aRst_n       => reset_n,
+    vid_pData    => curr_RGB,
+    vid_pVDE     => blanking,
+    vid_pHSync   => h_sync,
+    vid_pVSync   => v_sync,
+    PixelClk     => clk_pxl_test
 );
 end generate;
+
 
 HDMI_PLL: if TESTING_OWN_CLK_FOR_HDMI = '0' generate
 HDMI_if : entity work.HDMI_test
@@ -241,8 +209,26 @@ port map (
   i_rgb_pixel => curr_RGB,
   o_curr_x    => curr_x,
   o_curr_y    => curr_y,
-  blanking    => blanking
+  blanking    => blanking,
+  o_v_sync    => v_sync,
+  o_h_sync    => h_sync
 );
+
+
+RGB2DVI : entity work.rgb2dvi_0
+port map (
+    TMDS_Clk_p   => o_tmds_clk_p, 
+    TMDS_Clk_n   => o_tmds_clk_n, 
+    TMDS_Data_p  => o_tmds_data_p,
+    TMDS_Data_n  => o_tmds_data_n,
+    aRst_n       => reset_n,
+    vid_pData    => curr_RGB,
+    vid_pVDE     => blanking,
+    vid_pHSync   => h_sync,
+    vid_pVSync   => v_sync,
+    PixelClk     => clk_out2
+);
+
 end generate;
 
  image_generator_HDMI : entity work.HDMI_image_gen

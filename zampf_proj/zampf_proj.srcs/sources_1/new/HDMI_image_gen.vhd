@@ -44,6 +44,7 @@ architecture behavioral of HDMI_image_gen is
 --signal g_sig : std_logic_vector(7 downto 0);
 --signal b_sig : std_logic_vector(7 downto 0);
 --signal rgb    : std_logic_vector(23 downto 0) := (others => '0');
+--constant blank_h : integer := <value>; 
 begin
 
   -- drawing process

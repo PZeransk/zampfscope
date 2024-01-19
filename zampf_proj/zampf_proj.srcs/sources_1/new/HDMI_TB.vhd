@@ -96,7 +96,11 @@ port map(
   o_cs          => 	cs,
 
 -- o_curr_RGB    =>  curr_RGB,
-  o_tmds        =>  tmds_all
+ -- o_tmds        =>  tmds_all
+  o_tmds_clk_p  => tmds_all(0),
+  o_tmds_clk_n  => tmds_all(1),
+  o_tmds_data_p => tmds_all(4 downto 2),
+  o_tmds_data_n => tmds_all(7 downto 5)
   --o_video_ena   =>  blanking
 );
 

@@ -33,7 +33,10 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 entity adc_controller is
 	GENERIC(
-	C_resolution	:	integer	:= 8
+	C_resolution	:	integer	:= 8;
+	C_clk_ratio  	:   integer := 10;
+	C_data_length	:   integer := 16;
+	C_pixel_width   :   integer := 640
 	);
     Port (
     i_clk 			: in  STD_LOGIC;
@@ -91,8 +94,8 @@ begin
 
 master_spi_0 : ENTITY work.master_spi
 GENERIC MAP(
-	C_clk_ratio    => 10,
-	C_data_length  => 16
+	C_clk_ratio    => C_clk_ratio,
+	C_data_length  => C_data_length
 	)
 PORT MAP(
 	i_clk		   => i_clk,
@@ -124,6 +127,11 @@ PORT MAP(
 
 --
 IMAGE_GEN_TEST : ENTITY work.image_generator
+GENERIC MAP(
+	C_data_length 	=> C_data_length,
+	C_resolution 	=> C_resolution,
+	C_pixel_widht 	=> C_pixel_width
+	)
 PORT MAP(
 	i_clk			=> i_clk,
 	i_cs 			=> r_cs,
